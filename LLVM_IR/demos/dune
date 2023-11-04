@@ -2,7 +2,7 @@
  (name demoParse)
  (modules demoParse)
  (public_name demoParse)
- (libraries llvm_lib stdio))
+ (libraries parser stdio))
 
 (cram
  (applies_to parsingTests)
