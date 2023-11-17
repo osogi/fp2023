@@ -36,9 +36,23 @@ let parse_binary_operation =
     | tp, v1, v2 -> return (bin_op (var, tp, v1, v2))
   in
   whitespaces
-  *> choice [ help "sub" (fun x -> Ast.Sub x); help "mul" (fun x -> Ast.Mul x) ]
+  *> choice
+       [ help "add" (fun x -> Ast.Add x)
+       ; help "fadd" (fun x -> Ast.Fadd x)
+       ; help "mul" (fun x -> Ast.Mul x)
+       ; help "fmul" (fun x -> Ast.Fmul x)
+       ; help "sub" (fun x -> Ast.Sub x)
+       ; help "fsub" (fun x -> Ast.Fsub x)
+       ; help "udiv" (fun x -> Ast.Udiv x)
+       ; help "sdiv" (fun x -> Ast.Sdiv x)
+       ; help "fdiv" (fun x -> Ast.Fdiv x)
+       ; help "urem" (fun x -> Ast.Urem x)
+       ; help "srem" (fun x -> Ast.Srem x)
+       ; help "frem" (fun x -> Ast.Frem x)
+       ]
 ;;
 
+(* f''' help "{name.lower()}" (fun x -> Ast.{name} x);''' *)
 let parse_other_operation =
   let iicmp =
     lift3
