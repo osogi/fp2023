@@ -63,8 +63,18 @@ and binary_operation_body =
 [@@deriving show { with_path = false }]
 
 and binary_operation =
+  | Add of binary_operation_body 
+  | Fadd of binary_operation_body
   | Mul of binary_operation_body
+  | Fmul of binary_operation_body
   | Sub of binary_operation_body
+  | Fsub of binary_operation_body
+  | Udiv of binary_operation_body
+  | Sdiv of binary_operation_body
+  | Fdiv of binary_operation_body
+  | Urem of binary_operation_body
+  | Srem of binary_operation_body
+  | Frem of binary_operation_body
 [@@deriving show { with_path = false }]
 
 and other_operation =
