@@ -8,71 +8,69 @@ SPDX-License-Identifier: CC0-1.0
          basic_blocks =
          [((LocalVar "<start>"),
            (CLabel
-              [(Terminator
-                  (BrCond ((FromVariable ((LocalVar "5"), (TInteger 1))),
-                     (FromVariable ((LocalVar "6"), TLabel)),
-                     (FromVariable ((LocalVar "7"), TLabel)))));
-                (Other
-                   (Icmp ((LocalVar "5"), "slt", (TInteger 32),
-                      (FromVariable ((LocalVar "4"), (TInteger 32))),
-                      (Const (CInteger (32, 1))))));
+              [(MemoryAddress
+                  (Alloca ((LocalVar "2"), (TInteger 32),
+                     (Const (CInteger (1, 1))), 4)));
                 (MemoryAddress
-                   (Load ((LocalVar "4"), (TInteger 32),
-                      (FromVariable ((LocalVar "3"), TPointer)), 4)));
+                   (Alloca ((LocalVar "3"), (TInteger 32),
+                      (Const (CInteger (1, 1))), 4)));
                 (MemoryAddress
                    (Store ((TInteger 32),
                       (FromVariable ((LocalVar "0"), (TInteger 32))),
                       (FromVariable ((LocalVar "3"), TPointer)), 4)));
                 (MemoryAddress
-                   (Alloca ((LocalVar "3"), (TInteger 32),
-                      (Const (CInteger (1, 1))), 4)));
-                (MemoryAddress
-                   (Alloca ((LocalVar "2"), (TInteger 32),
-                      (Const (CInteger (1, 1))), 4)))
+                   (Load ((LocalVar "4"), (TInteger 32),
+                      (FromVariable ((LocalVar "3"), TPointer)), 4)));
+                (Other
+                   (Icmp ((LocalVar "5"), "slt", (TInteger 32),
+                      (FromVariable ((LocalVar "4"), (TInteger 32))),
+                      (Const (CInteger (32, 1))))));
+                (Terminator
+                   (BrCond ((FromVariable ((LocalVar "5"), (TInteger 1))),
+                      (FromVariable ((LocalVar "6"), TLabel)),
+                      (FromVariable ((LocalVar "7"), TLabel)))))
                 ]));
            ((LocalVar "6"),
             (CLabel
-               [(Terminator (Br (FromVariable ((LocalVar "13"), TLabel))));
-                 (MemoryAddress
-                    (Store ((TInteger 32), (Const (CInteger (32, 1))),
-                       (FromVariable ((LocalVar "2"), TPointer)), 4)))
-                 ]));
+               [(MemoryAddress
+                   (Store ((TInteger 32), (Const (CInteger (32, 1))),
+                      (FromVariable ((LocalVar "2"), TPointer)), 4)));
+                 (Terminator (Br (FromVariable ((LocalVar "13"), TLabel))))]));
            ((LocalVar "7"),
             (CLabel
-               [(Terminator (Br (FromVariable ((LocalVar "13"), TLabel))));
+               [(MemoryAddress
+                   (Load ((LocalVar "8"), (TInteger 32),
+                      (FromVariable ((LocalVar "3"), TPointer)), 4)));
+                 (Binary
+                    (Sub
+                       ((LocalVar "9"), (TInteger 32),
+                        (FromVariable ((LocalVar "8"), (TInteger 32))),
+                        (Const (CInteger (32, 1))))));
+                 (Other
+                    (Call ((LocalVar "10"), (TInteger 32),
+                       (Const (CPointer (PointerGlob (GlobalVar "fac")))),
+                       [(FromVariable ((LocalVar "9"), (TInteger 32)))])));
                  (MemoryAddress
-                    (Store ((TInteger 32),
-                       (FromVariable ((LocalVar "12"), (TInteger 32))),
-                       (FromVariable ((LocalVar "2"), TPointer)), 4)));
+                    (Load ((LocalVar "11"), (TInteger 32),
+                       (FromVariable ((LocalVar "3"), TPointer)), 4)));
                  (Binary
                     (Mul
                        ((LocalVar "12"), (TInteger 32),
                         (FromVariable ((LocalVar "10"), (TInteger 32))),
                         (FromVariable ((LocalVar "11"), (TInteger 32))))));
                  (MemoryAddress
-                    (Load ((LocalVar "11"), (TInteger 32),
-                       (FromVariable ((LocalVar "3"), TPointer)), 4)));
-                 (Other
-                    (Call ((LocalVar "10"), (TInteger 32),
-                       (Const (CPointer (PointerGlob (GlobalVar "fac")))),
-                       [(FromVariable ((LocalVar "9"), (TInteger 32)))])));
-                 (Binary
-                    (Sub
-                       ((LocalVar "9"), (TInteger 32),
-                        (FromVariable ((LocalVar "8"), (TInteger 32))),
-                        (Const (CInteger (32, 1))))));
-                 (MemoryAddress
-                    (Load ((LocalVar "8"), (TInteger 32),
-                       (FromVariable ((LocalVar "3"), TPointer)), 4)))
-                 ]));
+                    (Store ((TInteger 32),
+                       (FromVariable ((LocalVar "12"), (TInteger 32))),
+                       (FromVariable ((LocalVar "2"), TPointer)), 4)));
+                 (Terminator (Br (FromVariable ((LocalVar "13"), TLabel))))]));
            ((LocalVar "13"),
             (CLabel
-               [(Terminator
-                   (Ret ((TInteger 32),
-                      (FromVariable ((LocalVar "14"), (TInteger 32))))));
-                 (MemoryAddress
-                    (Load ((LocalVar "14"), (TInteger 32),
-                       (FromVariable ((LocalVar "2"), TPointer)), 4)))
+               [(MemoryAddress
+                   (Load ((LocalVar "14"), (TInteger 32),
+                      (FromVariable ((LocalVar "2"), TPointer)), 4)));
+                 (Terminator
+                    (Ret ((TInteger 32),
+                       (FromVariable ((LocalVar "14"), (TInteger 32))))))
                  ]))
            ]
          }))
