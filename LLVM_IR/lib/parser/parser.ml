@@ -62,7 +62,7 @@ let parse_basic_block_body =
     | Ast.Terminator _ -> return (instr :: lst)
     | _ -> help (instr :: lst)
   in
-  help []
+  (help []) >>| List.rev 
 ;;
 
 let parse_start_basic_block =
