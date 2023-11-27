@@ -27,7 +27,7 @@ and parse_const_aggregate_type ob cb tp_list =
   char ob
   *> whitespaces
   *> sep_by
-       (whitespaces *> char ',')
+       comma
        (whitespaces *> parse_main_type
         >>= fun tp -> whitespaces *> parse_const tp >>| fun c -> tp, c)
   <* whitespaces
@@ -53,7 +53,7 @@ and parse_const_array size vector_tp =
   char '<'
   *> whitespaces
   *> sep_by
-       (whitespaces *> char ',')
+       comma
        (whitespaces *> parse_main_type
         >>= fun tp ->
         whitespaces
@@ -206,8 +206,7 @@ let parse_type_with_value =
 let parse_type_with_value2 =
   parse_additional_type
   >>= fun tp ->
-  parse_value tp
-  >>= fun v1 -> whitespaces *> char ',' *> parse_value tp >>| fun v2 -> tp, v1, v2
+  parse_value tp >>= fun v1 -> comma *> parse_value tp >>| fun v2 -> tp, v1, v2
 ;;
 
 let type_with_value tp =

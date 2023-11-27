@@ -20,8 +20,8 @@ let parse_terminator_instruction =
     word "br"
     *> lift3
          (fun b l1 l2 -> Ast.BrCond (b, l1, l2))
-         (type_with_value (Ast.TInteger 1) <* char ',')
-         (type_with_value Ast.TLabel <* char ',')
+         (type_with_value (Ast.TInteger 1) <* comma)
+         (type_with_value Ast.TLabel <* comma)
          (type_with_value Ast.TLabel)
   and iswitch =
     word "switch"
@@ -84,7 +84,7 @@ let parse_other_operation =
       (whitespaces
        *> char '('
        *> sep_by
-            (whitespaces *> char ',')
+            ( comma)
             (whitespaces *> parse_type_with_value
              >>= function
              | _, value -> return value)
@@ -96,7 +96,7 @@ let parse_other_operation =
 
 let parse_memory_instruction =
   let parse_align =
-    whitespaces *> char ',' *> whitespaces *> word "align" *> whitespaces *> parse_integer
+    comma *> word "align" *> whitespaces *> parse_integer
     <|> return 1
   in
   let ialloca =
@@ -104,7 +104,7 @@ let parse_memory_instruction =
       (fun var tp value align -> Ast.Alloca (var, tp, value, align))
       parse_instruction_result
       (whitespaces *> word "alloca" *> parse_main_type)
-      (whitespaces *> char ',' *> whitespaces *> parse_type_with_value
+      (comma *> parse_type_with_value
        >>= (function
               | Ast.TInteger _, value -> return value
               | _ -> fail "Parser error: excepted integer type")
@@ -114,14 +114,14 @@ let parse_memory_instruction =
     lift3
       (fun (tp, value) vptr align -> Ast.Store (tp, value, vptr, align))
       (whitespaces *> word "store" *> whitespaces *> parse_type_with_value)
-      (whitespaces *> char ',' *> whitespaces *> type_with_value Ast.TPointer)
+      (comma *> type_with_value Ast.TPointer)
       parse_align
   and iload =
     lift4
       (fun res tp vptr align -> Ast.Load (res, tp, vptr, align))
       parse_instruction_result
       (whitespaces *> word "load" *> parse_main_type)
-      (whitespaces *> char ',' *> whitespaces *> type_with_value Ast.TPointer)
+      (comma *> type_with_value Ast.TPointer)
       parse_align
   in
   whitespaces *> choice [ ialloca; istore; iload ]
