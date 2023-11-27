@@ -58,7 +58,7 @@ let parse_main_type =
       lift3
         (fun h tl _ -> Ast.TStruct (List.cons h tl))
         (whitespaces *> char '{' *> whitespaces *> parse_type)
-        (many (whitespaces *> char ',' *> whitespaces *> parse_type))
+        (many (comma *> parse_type))
         (whitespaces *> char '}')
     in
     choice

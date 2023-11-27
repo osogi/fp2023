@@ -34,7 +34,7 @@ let parse_function_annotation =
     (whitespaces
      *> char '('
      *> sep_by
-          (whitespaces *> char ',')
+          comma
           (whitespaces
            *> lift2 (fun tp name -> tp, name) parse_main_type parse_local_variable)
      <* whitespaces
@@ -62,7 +62,7 @@ let parse_basic_block_body =
     | Ast.Terminator _ -> return (instr :: lst)
     | _ -> help (instr :: lst)
   in
-  (help []) >>| List.rev 
+  help [] >>| List.rev
 ;;
 
 let parse_start_basic_block =
