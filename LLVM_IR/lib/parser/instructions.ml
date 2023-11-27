@@ -23,8 +23,23 @@ let parse_terminator_instruction =
          (type_with_value (Ast.TInteger 1) <* char ',')
          (type_with_value Ast.TLabel <* char ',')
          (type_with_value Ast.TLabel)
+  and iswitch =
+    word "switch"
+    *> let* value_type, switch_value = parse_type_with_value <* comma in
+       let* default_dest = type_with_value Ast.TLabel in
+       let* switch_list =
+         whitespaces
+         *> char '[' *> whitespaces
+         *> many
+              (lift2
+                 (fun x y -> (x, y))
+                 (type_with_value value_type <* comma)
+                 (type_with_value Ast.TLabel))
+         <* whitespaces <* char ']'
+       in
+       return (Ast.Switch (value_type, switch_value, default_dest, switch_list))
   in
-  whitespaces *> choice [ iret; ibr; ibr_cond ]
+  whitespaces *> choice [ iret; ibr; ibr_cond; iswitch ]
 ;;
 
 let parse_binary_operation =
@@ -144,6 +159,26 @@ let%expect_test _ =
           (FromVariable ((LocalVar "6"), TLabel)),
           (FromVariable ((LocalVar "7"), TLabel))))) |}]
 ;;
+
+
+let%expect_test _ =
+  test_parse parse_instruction Ast.show_instruction {| switch i32 %val, label %otherwise [ i32 0, label %onzero
+  i32 1, label %onone
+  i32 2, label %ontwo ] |};
+  [%expect{|
+    (Terminator
+       (Switch ((TInteger 32), (FromVariable ((LocalVar "val"), (TInteger 32))),
+          (FromVariable ((LocalVar "otherwise"), TLabel)),
+          [((Const (CInteger (32, 0))),
+            (FromVariable ((LocalVar "onzero"), TLabel)));
+            ((Const (CInteger (32, 1))),
+             (FromVariable ((LocalVar "onone"), TLabel)));
+            ((Const (CInteger (32, 2))),
+             (FromVariable ((LocalVar "ontwo"), TLabel)))
+            ]
+          ))) |}]
+;;
+
 
 let%expect_test _ =
   test_parse parse_instruction Ast.show_instruction "  %9 = sub i32 %8, 1";

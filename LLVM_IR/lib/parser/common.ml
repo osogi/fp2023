@@ -24,6 +24,7 @@ let comment =
 ;;
 
 let whitespaces = many (skip whitespace <|> comment)
+let comma = whitespaces *> char ',' <* whitespaces
 
 let str_integer =
   take_while1 (function
