@@ -56,6 +56,8 @@ and terminator_instruction =
   | Ret of tp * value (** ret <type> <value> *)
   | Br of value (** br label <dest> *)
   | BrCond of value * value * value (** br i1 <cond>, label <iftrue>, label <iffalse> *)
+  | Switch of tp * value * value * (value * value) list
+  (** switch <intty> <value>, label <defaultdest> [ <intty> <val>, label <dest> ... ] *)
 [@@deriving show { with_path = false }]
 
 and binary_operation_body =
@@ -63,7 +65,7 @@ and binary_operation_body =
 [@@deriving show { with_path = false }]
 
 and binary_operation =
-  | Add of binary_operation_body 
+  | Add of binary_operation_body
   | Fadd of binary_operation_body
   | Mul of binary_operation_body
   | Fmul of binary_operation_body
