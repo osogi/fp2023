@@ -148,6 +148,26 @@ let parse_vector_instruction =
   whitespaces *> choice [ iextractelement; iinsertelement; ishufflevector ]
 ;;
 
+let parse_aggregate_instruction =
+  let iextractvalue =
+    let* res_var = parse_instruction_result in
+    let* agg_tp, agg_val =
+      whitespaces *> word "extractvalue" *> whitespaces *> parse_type_with_value <* comma
+    in
+    let* indexes = sep_by1 comma parse_integer in
+    return (Ast.Extractvalue (res_var, agg_tp, agg_val, indexes))
+  and iinsertvalue =
+    let* res_var = parse_instruction_result in
+    let* agg_tp, agg_val =
+      whitespaces *> word "insertvalue" *> whitespaces *> parse_type_with_value <* comma
+    in
+    let* value_tp, value_val = parse_type_with_value <* comma in
+    let* indexes = sep_by1 comma parse_integer in
+    return (Ast.Insertvalue (res_var, agg_tp, agg_val, value_tp, value_val, indexes))
+  in
+  whitespaces *> choice [ iextractvalue; iinsertvalue ]
+;;
+
 let parse_other_operation =
   let iicmp =
     lift3
@@ -211,6 +231,7 @@ let parse_instruction : Ast.instruction t =
     ; (parse_binary_operation >>| fun ins -> Ast.Binary ins)
     ; (parse_bitwise_binary_operation >>| fun ins -> Ast.BitwiseBinary ins)
     ; (parse_vector_instruction >>| fun ins -> Ast.Vector ins)
+    ; (parse_aggregate_instruction >>| fun ins -> Ast.Aggregate ins)
     ; (parse_other_operation >>| fun ins -> Ast.Other ins)
     ; (parse_memory_instruction >>| fun ins -> Ast.MemoryAddress ins)
     ]
@@ -375,13 +396,12 @@ let%expect_test _ =
             (Const (CInteger (32, 1))), (TInteger 32), (Const (CInteger (32, 0)))))) |}]
 ;;
 
-
 let%expect_test _ =
   test_parse
     parse_instruction
     Ast.show_instruction
-    "%result = shufflevector <4 x i32> %v1, <4 x i32> %v2,
-    <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7 > ";
+    "%result = shufflevector <4 x i32> %v1, <4 x i32> %v2,\n\
+    \    <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7 > ";
   [%expect
     {|
       (Vector
@@ -395,7 +415,37 @@ let%expect_test _ =
             ))) |}]
 ;;
 
+(* #############################################################*)
+(* ##################### Aggregate #############################*)
+(* #############################################################*)
 
+let%expect_test _ =
+  test_parse
+    parse_instruction
+    Ast.show_instruction
+    "%result = extractvalue {i32, float} %agg, 0    ; yields i32";
+  [%expect
+    {|
+      (Aggregate
+         (Extractvalue ((LocalVar "result"), (TStruct [(TInteger 32); TFloat]),
+            (FromVariable ((LocalVar "agg"), (TStruct [(TInteger 32); TFloat]))),
+            [0]))) |}]
+;;
+
+let%expect_test _ =
+  test_parse
+    parse_instruction
+    Ast.show_instruction
+    "%agg3 = insertvalue {i32, {float}} %agg1, float %val, 1, 0 ";
+  [%expect
+    {|
+      (Aggregate
+         (Insertvalue ((LocalVar "agg3"),
+            (TStruct [(TInteger 32); (TStruct [TFloat])]),
+            (FromVariable ((LocalVar "agg1"),
+               (TStruct [(TInteger 32); (TStruct [TFloat])]))),
+            TFloat, (FromVariable ((LocalVar "val"), TFloat)), [1; 0]))) |}]
+;;
 
 (* ##########################################################*)
 (* ##################### OTHER ##############################*)
