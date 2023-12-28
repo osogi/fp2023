@@ -112,6 +112,42 @@ let parse_bitwise_binary_operation =
        ]
 ;;
 
+let parse_vector_instruction =
+  let iextractelement =
+    let* res_var = parse_instruction_result in
+    let* vec_tp, vec_val =
+      whitespaces *> word "extractelement" *> whitespaces *> parse_type_with_value
+      <* comma
+    in
+    let* int_tp, int_val = parse_type_with_value in
+    return (Ast.Extractelement (res_var, vec_tp, vec_val, int_tp, int_val))
+  and iinsertelement =
+    let* res_var = parse_instruction_result in
+    let* vec_tp, vec_val =
+      whitespaces *> word "insertelement" *> whitespaces *> parse_type_with_value <* comma
+    in
+    let* elem_val =
+      match vec_tp with
+      | Ast.TVector (_, elem_tp) -> type_with_value elem_tp <* comma
+      | _ -> fail "Parser error: insertelement's first value should be vector type"
+    in
+    let* int_tp, int_val = parse_type_with_value in
+    return (Ast.Insertelement (res_var, vec_tp, vec_val, elem_val, int_tp, int_val))
+  and ishufflevector =
+    let* res_var = parse_instruction_result in
+    let* vec_tp, vec_v1 =
+      whitespaces *> word "shufflevector" *> whitespaces *> parse_type_with_value <* comma
+    in
+    let* vec_v2 = type_with_value vec_tp <* comma in
+    let* mask_tp, mask_val = parse_type_with_value in
+    match mask_tp, mask_val with
+    | Ast.TVector (mask_size, Ast.TInteger 32), Ast.Const mask_const ->
+      return (Ast.Shufflevector (res_var, vec_tp, vec_v1, vec_v2, mask_size, mask_const))
+    | _ -> fail "Parser error: couldn't parse mask for shufflevector instruction"
+  in
+  whitespaces *> choice [ iextractelement; iinsertelement; ishufflevector ]
+;;
+
 let parse_other_operation =
   let iicmp =
     lift3
@@ -174,6 +210,7 @@ let parse_instruction : Ast.instruction t =
     ; (parse_unary_operation >>| fun ins -> Ast.Unary ins)
     ; (parse_binary_operation >>| fun ins -> Ast.Binary ins)
     ; (parse_bitwise_binary_operation >>| fun ins -> Ast.BitwiseBinary ins)
+    ; (parse_vector_instruction >>| fun ins -> Ast.Vector ins)
     ; (parse_other_operation >>| fun ins -> Ast.Other ins)
     ; (parse_memory_instruction >>| fun ins -> Ast.MemoryAddress ins)
     ]
@@ -307,6 +344,58 @@ let%expect_test _ =
             ((LocalVar "res"), (TInteger 8), (Const (CInteger (8, 252))),
              (Const (CInteger (8, 221)))))) |}]
 ;;
+
+(* ##########################################################*)
+(* ##################### VECTOR #############################*)
+(* ##########################################################*)
+
+let%expect_test _ =
+  test_parse
+    parse_instruction
+    Ast.show_instruction
+    "%result = extractelement <4 x i32> %vec, i32 0 ";
+  [%expect
+    {|
+      (Vector
+         (Extractelement ((LocalVar "result"), (TVector (4, (TInteger 32))),
+            (FromVariable ((LocalVar "vec"), (TVector (4, (TInteger 32))))),
+            (TInteger 32), (Const (CInteger (32, 0)))))) |}]
+;;
+
+let%expect_test _ =
+  test_parse
+    parse_instruction
+    Ast.show_instruction
+    "%result = insertelement <4 x i32> %vec, i32 1, i32 0    ; yields <4 x i32> ";
+  [%expect
+    {|
+      (Vector
+         (Insertelement ((LocalVar "result"), (TVector (4, (TInteger 32))),
+            (FromVariable ((LocalVar "vec"), (TVector (4, (TInteger 32))))),
+            (Const (CInteger (32, 1))), (TInteger 32), (Const (CInteger (32, 0)))))) |}]
+;;
+
+
+let%expect_test _ =
+  test_parse
+    parse_instruction
+    Ast.show_instruction
+    "%result = shufflevector <4 x i32> %v1, <4 x i32> %v2,
+    <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7 > ";
+  [%expect
+    {|
+      (Vector
+         (Shufflevector ((LocalVar "result"), (TVector (4, (TInteger 32))),
+            (FromVariable ((LocalVar "v1"), (TVector (4, (TInteger 32))))),
+            (FromVariable ((LocalVar "v2"), (TVector (4, (TInteger 32))))), 8,
+            (CVector
+               [(CInteger (32, 0)); (CInteger (32, 1)); (CInteger (32, 2));
+                 (CInteger (32, 3)); (CInteger (32, 4)); (CInteger (32, 5));
+                 (CInteger (32, 6)); (CInteger (32, 7))])
+            ))) |}]
+;;
+
+
 
 (* ##########################################################*)
 (* ##################### OTHER ##############################*)
