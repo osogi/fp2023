@@ -121,6 +121,8 @@ and memory_address_instruction =
   (** store <ty> <value>, ptr <pointer>[, align <alignment>] *)
   | Load of variable * tp * value * align
   (** <result> = load <ty>, ptr <pointer>[, align <alignment>]*)
+  | Getelementptr of variable * tp * tp * value * (tp * value) list
+  (** <result> = getelementptr <ty>, <ptr_or_ptr_vector> <ptrval>{, <ty> <idx>}* *)
 
 and instruction =
   | Terminator of terminator_instruction
