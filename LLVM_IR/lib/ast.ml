@@ -93,6 +93,15 @@ and bitwise_binary_operation =
   | Xor of binary_operation_body
 [@@deriving show { with_path = false }]
 
+and vector_instructions =
+  | Extractelement of variable * tp * value * tp * value
+  (** <result> = extractelement <n x <ty>> <val>, <ty2> <idx> *)
+  | Insertelement of variable * tp * value * value * tp * value
+  (** <result> = insertelement <n x <ty>> <val>, <ty> <elt>, <ty2> <idx> *)
+  | Shufflevector of variable * tp * value * value * int * const
+  (** <result> = shufflevector <n x <ty>> <v1>, <n x <ty>> <v2>, <m x i32> <mask> *)
+[@@deriving show { with_path = false }]
+
 and other_operation =
   | Icmp of variable * string * tp * value * value
   (** <result> = icmp <cond> <ty> <op1>, <op2> *)
@@ -112,6 +121,7 @@ and instruction =
   | Unary of unary_operation
   | Binary of binary_operation
   | BitwiseBinary of bitwise_binary_operation
+  | Vector of vector_instructions
   | Other of other_operation
   | MemoryAddress of memory_address_inst
 (* | Unary
