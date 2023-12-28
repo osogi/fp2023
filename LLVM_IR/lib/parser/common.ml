@@ -32,7 +32,13 @@ let str_integer =
     | _ -> false)
 ;;
 
-let parse_integer = str_integer >>| int_of_string
+let str_extended_integer =
+  take_while1 (function
+    | 'a' .. 'f' -> true
+    | 'A' .. 'F' -> true
+    | '0' .. '9' -> true
+    | _ -> false)
+;;
 
 let varname_char = function
   | 'a' .. 'z' -> true
@@ -53,6 +59,14 @@ let parse_word =
 let word str =
   parse_word
   >>= fun parsed -> if parsed = str then return str else fail "Parser error: Wrong word"
+;;
+
+let parse_integer =
+  let* prefix = choice [ string "0x"; string "0o"; string "0b"; return "" ] in
+  let* int_body = str_extended_integer in
+  match int_of_string_opt (String.concat "" [ prefix; int_body ]) with
+  | Some x -> return x
+  | None -> fail "Parser error: can't parse int"
 ;;
 
 let parse_named_name =

@@ -81,7 +81,7 @@ and parse_const_float =
   | None -> fail "Can't parse float"
 
 and parse_const_integer size =
-  (*TODO: other integer types *)
+  let* sign = choice [ char '-' *> return (-1); return 1 ] in
   parse_integer
   >>| fun value ->
   Ast.CInteger
@@ -90,7 +90,7 @@ and parse_const_integer size =
         let result = x mod y in
         if result >= 0 then result else result + y
       in
-      modulo value (Int.shift_left 1 size) )
+      modulo (sign * value) (Int.shift_left 1 size) )
 ;;
 
 let parse_value tp =
