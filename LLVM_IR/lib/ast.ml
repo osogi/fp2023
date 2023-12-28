@@ -124,6 +124,20 @@ and memory_address_instruction =
   | Getelementptr of variable * tp * tp * value * (tp * value) list
   (** <result> = getelementptr <ty>, <ptr_or_ptr_vector> <ptrval>{, <ty> <idx>}* *)
 
+(** <result> = <conv_inst> <ty> <value> to <ty2> *)
+and conversion_instruction_body = variable * tp * value * tp
+
+and conversion_instruction =
+  | TruncTo of conversion_instruction_body
+  | ZextTo of conversion_instruction_body
+  | SextTo of conversion_instruction_body
+  | FptouiTo of conversion_instruction_body
+  | FptosiTo of conversion_instruction_body
+  | UitofpTo of conversion_instruction_body
+  | SitofpTo of conversion_instruction_body
+  | PrttointTo of conversion_instruction_body
+  | InttoprtTo of conversion_instruction_body
+
 and instruction =
   | Terminator of terminator_instruction
   | Unary of unary_operation
@@ -133,6 +147,7 @@ and instruction =
   | Aggregate of aggregate_instruction
   | Other of other_operation
   | MemoryAddress of memory_address_instruction
+  | Conversion of conversion_instruction
 [@@deriving show { with_path = true }]
 (* ############ Instructions End ########### *)
 

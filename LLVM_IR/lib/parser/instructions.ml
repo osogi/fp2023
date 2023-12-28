@@ -230,6 +230,34 @@ let parse_memory_instruction =
   whitespaces *> choice [ ialloca; istore; iload; igetelementptr ]
 ;;
 
+let parse_conversion_instruction =
+  let help
+    (mnem : string)
+    (conv_inst : Ast.conversion_instruction_body -> Ast.conversion_instruction)
+    =
+    let* res_var = parse_instruction_result in
+    let* value_tp_src, value_val =
+      whitespaces *> word mnem *> whitespaces *> parse_type_with_value
+    in
+    let* value_tp_dst =
+      whitespaces *> word "to" *> whitespaces *> parse_additional_type
+    in
+    return (conv_inst (res_var, value_tp_src, value_val, value_tp_dst))
+  in
+  whitespaces
+  *> choice
+       [ help "trunc" (fun x -> Ast.TruncTo x)
+       ; help "zext" (fun x -> Ast.ZextTo x)
+       ; help "sext" (fun x -> Ast.SextTo x)
+       ; help "fptoui" (fun x -> Ast.FptouiTo x)
+       ; help "fptosi" (fun x -> Ast.FptosiTo x)
+       ; help "uitofp" (fun x -> Ast.UitofpTo x)
+       ; help "sitofp" (fun x -> Ast.SitofpTo x)
+       ; help "ptrtoint" (fun x -> Ast.PrttointTo x)
+       ; help "inttoptr" (fun x -> Ast.InttoprtTo x)
+       ]
+;;
+
 let parse_instruction : Ast.instruction t =
   choice
     [ (parse_terminator_instruction >>| fun ins -> Ast.Terminator ins)
@@ -240,6 +268,7 @@ let parse_instruction : Ast.instruction t =
     ; (parse_aggregate_instruction >>| fun ins -> Ast.Aggregate ins)
     ; (parse_other_operation >>| fun ins -> Ast.Other ins)
     ; (parse_memory_instruction >>| fun ins -> Ast.MemoryAddress ins)
+    ; (parse_conversion_instruction >>| fun ins -> Ast.Conversion ins)
     ]
 ;;
 
@@ -584,4 +613,39 @@ let%expect_test _ =
                      (CInteger (64, 0))])))
             ]
           ))) |}]
+;;
+
+(* ##########################################################*)
+(* #################### CONVERSION ##########################*)
+(* ##########################################################*)
+
+let%expect_test _ =
+  test_parse parse_instruction Ast.show_instruction " %Y = inttoptr i32 255 to ptr";
+  [%expect
+    {|
+      (Conversion
+         (InttoprtTo
+            ((LocalVar "Y"), (TInteger 32), (Const (CInteger (32, 255))), TPointer))) |}]
+;;
+
+let%expect_test _ =
+  test_parse parse_instruction Ast.show_instruction "%Y = fptoui float 1.0 to i1";
+  [%expect
+    {|
+      (Conversion
+         (FptouiTo ((LocalVar "Y"), TFloat, (Const (CFloat 1.)), (TInteger 1)))) |}]
+;;
+
+let%expect_test _ =
+  test_parse
+    parse_instruction
+    Ast.show_instruction
+    "%Z = zext <2 x i16> <i16 8, i16 7> to <2 x i32>";
+  [%expect
+    {|
+      (Conversion
+         (ZextTo
+            ((LocalVar "Z"), (TVector (2, (TInteger 16))),
+             (Const (CVector [(CInteger (16, 8)); (CInteger (16, 7))])),
+             (TVector (2, (TInteger 32)))))) |}]
 ;;
