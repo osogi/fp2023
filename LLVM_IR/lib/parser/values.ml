@@ -81,16 +81,25 @@ and parse_const_float =
   | None -> fail "Can't parse float"
 
 and parse_const_integer size =
-  let* sign = choice [ char '-' *> return (-1); return 1 ] in
-  parse_integer
-  >>| fun value ->
-  Ast.CInteger
-    ( size
-    , let modulo x y =
-        let result = x mod y in
-        if result >= 0 then result else result + y
-      in
-      modulo (sign * value) (Int.shift_left 1 size) )
+  choice
+    [ (let* sign = choice [ char '-' *> return (-1); return 1 ] in
+       parse_integer
+       >>| fun value ->
+       Ast.CInteger
+         ( size
+         , let modulo x y =
+             let result = x mod y in
+             if result >= 0 then result else result + y
+           in
+           modulo (sign * value) (Int.shift_left 1 size) ))
+    ; (if size == 1
+       then
+         choice
+           [ word "true" *> return (Ast.CInteger (size, 1))
+           ; word "false" *> return (Ast.CInteger (size, 0))
+           ]
+       else fail "Parser error: can't parse i1 const")
+    ]
 ;;
 
 let parse_value tp =
