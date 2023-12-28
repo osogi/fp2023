@@ -108,12 +108,6 @@ and aggregate_instruction =
   | Insertvalue of variable * tp * value * tp * value * int list
   (** <result> = insertvalue <aggregate type> <val>, <ty> <elt>, <idx>{, <idx>}* *)
 
-and other_operation =
-  | Icmp of variable * string * tp * value * value
-  (** <result> = icmp <cond> <ty> <op1>, <op2> *)
-  | Call of variable * tp * value * value list
-  (** <result> = call <ty> <fnptrval>(<function args>) *)
-
 and memory_address_instruction =
   | Alloca of variable * tp * value * align
   (** <result> = alloca <type> [, <ty> <NumElements>] [, align <alignment>] *)
@@ -137,6 +131,18 @@ and conversion_instruction =
   | SitofpTo of conversion_instruction_body
   | PrttointTo of conversion_instruction_body
   | InttoprtTo of conversion_instruction_body
+
+and other_operation =
+  | Icmp of variable * string * tp * value * value
+  (** <result> = icmp <cond> <ty> <op1>, <op2> *)
+  | Fcmp of variable * string * tp * value * value
+  (** <result> = fcmp <cond> <ty> <op1>, <op2> *)
+  | Phi of variable * tp * (value * value) list
+  (** <result> = phi <ty> [ <val0>, <label0>], ... *)
+  | Select of variable * tp * value * tp * value * value
+  (** <result> = select <i1 or i1_vec> <cond>, <ty> <val1>, <ty> <val2>*)
+  | Call of variable * tp * value * value list
+  (** <result> = call <ty> <fnptrval>(<function args>) *)
 
 and instruction =
   | Terminator of terminator_instruction

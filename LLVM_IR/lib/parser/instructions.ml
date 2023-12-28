@@ -168,32 +168,6 @@ let parse_aggregate_instruction =
   whitespaces *> choice [ iextractvalue; iinsertvalue ]
 ;;
 
-let parse_other_operation =
-  let iicmp =
-    lift3
-      (fun var cond (tp, v1, v2) -> Ast.Icmp (var, cond, tp, v1, v2))
-      parse_instruction_result
-      (whitespaces *> word "icmp" *> whitespaces *> parse_word)
-      (whitespaces *> parse_type_with_value2)
-  and icall =
-    lift4
-      (fun var ret_tp vptr arg_lst -> Ast.Call (var, ret_tp, vptr, arg_lst))
-      parse_instruction_result
-      (whitespaces *> word "call" *> whitespaces *> parse_additional_type)
-      (whitespaces *> parse_value Ast.TPointer)
-      (whitespaces
-       *> char '('
-       *> sep_by
-            comma
-            (whitespaces *> parse_type_with_value
-             >>= function
-             | _, value -> return value)
-       <* whitespaces
-       <* char ')')
-  in
-  whitespaces *> choice [ iicmp; icall ]
-;;
-
 let parse_memory_instruction =
   let parse_align = comma *> word "align" *> whitespaces *> parse_integer <|> return 1 in
   let ialloca =
@@ -256,6 +230,59 @@ let parse_conversion_instruction =
        ; help "ptrtoint" (fun x -> Ast.PrttointTo x)
        ; help "inttoptr" (fun x -> Ast.InttoprtTo x)
        ]
+;;
+
+let parse_other_operation =
+  let iicmp =
+    lift3
+      (fun var cond (tp, v1, v2) -> Ast.Icmp (var, cond, tp, v1, v2))
+      parse_instruction_result
+      (whitespaces *> word "icmp" *> whitespaces *> parse_word)
+      (whitespaces *> parse_type_with_value2)
+  and ifcmp =
+    lift3
+      (fun var cond (tp, v1, v2) -> Ast.Icmp (var, cond, tp, v1, v2))
+      parse_instruction_result
+      (whitespaces *> word "fcmp" *> whitespaces *> parse_word)
+      (whitespaces *> parse_type_with_value2)
+  and iphi =
+    let* res_var = parse_instruction_result in
+    let* res_tp = whitespaces *> word "phi" *> whitespaces *> parse_additional_type in
+    let* choose_lst =
+      sep_by1
+        comma
+        (whitespaces *> char '[' *> parse_value res_tp
+         >>= (fun value ->
+               comma *> parse_value Ast.TLabel >>= fun label -> return (value, label))
+         <* whitespaces
+         <* char ']')
+    in
+    return (Ast.Phi (res_var, res_tp, choose_lst))
+  and iselect =
+    let* res_var = parse_instruction_result in
+    let* cond_tp, cond_val =
+      whitespaces *> word "select" *> whitespaces *> parse_type_with_value <* comma
+    in
+    let* value_tp, value_v1 = parse_type_with_value <* comma in
+    let* value_v2 = type_with_value value_tp in
+    return (Ast.Select (res_var, cond_tp, cond_val, value_tp, value_v1, value_v2))
+  and icall =
+    lift4
+      (fun var ret_tp vptr arg_lst -> Ast.Call (var, ret_tp, vptr, arg_lst))
+      parse_instruction_result
+      (whitespaces *> word "call" *> whitespaces *> parse_additional_type)
+      (whitespaces *> parse_value Ast.TPointer)
+      (whitespaces
+       *> char '('
+       *> sep_by
+            comma
+            (whitespaces *> parse_type_with_value
+             >>= function
+             | _, value -> return value)
+       <* whitespaces
+       <* char ')')
+  in
+  whitespaces *> choice [ iicmp; ifcmp; iphi; iselect; icall ]
 ;;
 
 let parse_instruction : Ast.instruction t =
@@ -483,30 +510,6 @@ let%expect_test _ =
 ;;
 
 (* ##########################################################*)
-(* ##################### OTHER ##############################*)
-(* ##########################################################*)
-
-let%expect_test _ =
-  test_parse parse_instruction Ast.show_instruction "   %10 = call i32 @fac(i32 %9)  ";
-  [%expect
-    {|
-    (Other
-       (Call ((LocalVar "10"), (TInteger 32),
-          (Const (CPointer (PointerGlob (GlobalVar "fac")))),
-          [(FromVariable ((LocalVar "9"), (TInteger 32)))]))) |}]
-;;
-
-let%expect_test _ =
-  test_parse parse_instruction Ast.show_instruction " %5 = icmp slt i32 %4, 1";
-  [%expect
-    {|
-    (Other
-       (Icmp ((LocalVar "5"), "slt", (TInteger 32),
-          (FromVariable ((LocalVar "4"), (TInteger 32))),
-          (Const (CInteger (32, 1)))))) |}]
-;;
-
-(* ##########################################################*)
 (* ################ MEMORY ADDRESS ##########################*)
 (* ##########################################################*)
 
@@ -648,4 +651,63 @@ let%expect_test _ =
             ((LocalVar "Z"), (TVector (2, (TInteger 16))),
              (Const (CVector [(CInteger (16, 8)); (CInteger (16, 7))])),
              (TVector (2, (TInteger 32)))))) |}]
+;;
+
+(* ##########################################################*)
+(* ##################### OTHER ##############################*)
+(* ##########################################################*)
+
+let%expect_test _ =
+  test_parse parse_instruction Ast.show_instruction " %5 = icmp slt i32 %4, 1";
+  [%expect
+    {|
+    (Other
+       (Icmp ((LocalVar "5"), "slt", (TInteger 32),
+          (FromVariable ((LocalVar "4"), (TInteger 32))),
+          (Const (CInteger (32, 1)))))) |}]
+;;
+
+let%expect_test _ =
+  test_parse parse_instruction Ast.show_instruction "   %10 = call i32 @fac(i32 %9)  ";
+  [%expect
+    {|
+    (Other
+       (Call ((LocalVar "10"), (TInteger 32),
+          (Const (CPointer (PointerGlob (GlobalVar "fac")))),
+          [(FromVariable ((LocalVar "9"), (TInteger 32)))]))) |}]
+;;
+
+let%expect_test _ =
+  test_parse parse_instruction Ast.show_instruction "  %res = fcmp one float 4.0, 5.0";
+  [%expect
+    {|
+    (Other
+       (Icmp ((LocalVar "res"), "one", TFloat, (Const (CFloat 4.)),
+          (Const (CFloat 5.))))) |}]
+;;
+
+let%expect_test _ =
+  test_parse
+    parse_instruction
+    Ast.show_instruction
+    " %indvar = phi i32 [ 0, %LoopHeader ], [ %nextindvar, %Loop ]";
+  [%expect
+    {|
+    (Other
+       (Phi ((LocalVar "indvar"), (TInteger 32),
+          [((Const (CInteger (32, 0))),
+            (FromVariable ((LocalVar "LoopHeader"), TLabel)));
+            ((FromVariable ((LocalVar "nextindvar"), (TInteger 32))),
+             (FromVariable ((LocalVar "Loop"), TLabel)))
+            ]
+          ))) |}]
+;;
+
+let%expect_test _ =
+  test_parse parse_instruction Ast.show_instruction "%X = select i1 true, i8 17, i8 42";
+  [%expect
+    {|
+      (Other
+         (Select ((LocalVar "X"), (TInteger 1), (Const (CInteger (1, 1))),
+            (TInteger 8), (Const (CInteger (8, 17))), (Const (CInteger (8, 42)))))) |}]
 ;;
