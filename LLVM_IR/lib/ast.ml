@@ -58,6 +58,8 @@ and terminator_instruction =
   | BrCond of value * value * value (** br i1 <cond>, label <iftrue>, label <iffalse> *)
   | Switch of tp * value * value * (value * value) list
   (** switch <intty> <value>, label <defaultdest> [ <intty> <val>, label <dest> ... ] *)
+  | Indirectbr of value (** indirectbr ptr <dest>*)
+  | Unreachable (** unreachable *)
 [@@deriving show { with_path = false }]
 
 and binary_operation_body =

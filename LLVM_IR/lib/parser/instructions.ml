@@ -29,17 +29,33 @@ let parse_terminator_instruction =
        let* default_dest = type_with_value Ast.TLabel in
        let* switch_list =
          whitespaces
-         *> char '[' *> whitespaces
+         *> char '['
+         *> whitespaces
          *> many
               (lift2
-                 (fun x y -> (x, y))
+                 (fun x y -> x, y)
                  (type_with_value value_type <* comma)
                  (type_with_value Ast.TLabel))
-         <* whitespaces <* char ']'
+         <* whitespaces
+         <* char ']'
        in
        return (Ast.Switch (value_type, switch_value, default_dest, switch_list))
+  and iindirectbr =
+    word "indirectbr"
+    *> let* destination = type_with_value Ast.TPointer <* comma in
+       let* _ =
+         whitespaces
+         *> char '['
+         *> whitespaces
+         *> sep_by comma (type_with_value Ast.TLabel)
+         <* whitespaces
+         <* char ']'
+       in
+       return (Ast.Indirectbr destination)
+  and iunreachable = 
+  word "unreachable" *> return Ast.Unreachable
   in
-  whitespaces *> choice [ iret; ibr; ibr_cond; iswitch ]
+  whitespaces *> choice [ iret; ibr; ibr_cond; iswitch; iindirectbr; iunreachable ]
 ;;
 
 let parse_binary_operation =
@@ -67,7 +83,6 @@ let parse_binary_operation =
        ]
 ;;
 
-(* f''' help "{name.lower()}" (fun x -> Ast.{name} x);''' *)
 let parse_other_operation =
   let iicmp =
     lift3
@@ -84,7 +99,7 @@ let parse_other_operation =
       (whitespaces
        *> char '('
        *> sep_by
-            ( comma)
+            comma
             (whitespaces *> parse_type_with_value
              >>= function
              | _, value -> return value)
@@ -95,10 +110,7 @@ let parse_other_operation =
 ;;
 
 let parse_memory_instruction =
-  let parse_align =
-    comma *> word "align" *> whitespaces *> parse_integer
-    <|> return 1
-  in
+  let parse_align = comma *> word "align" *> whitespaces *> parse_integer <|> return 1 in
   let ialloca =
     lift4
       (fun var tp value align -> Ast.Alloca (var, tp, value, align))
@@ -136,6 +148,10 @@ let parse_instruction : Ast.instruction t =
     ]
 ;;
 
+(* ##########################################################*)
+(* ################ TERMINATOR ##############################*)
+(* ##########################################################*)
+
 let%expect_test _ =
   test_parse parse_instruction Ast.show_instruction "ret i32 %14";
   [%expect
@@ -160,12 +176,15 @@ let%expect_test _ =
           (FromVariable ((LocalVar "7"), TLabel))))) |}]
 ;;
 
-
 let%expect_test _ =
-  test_parse parse_instruction Ast.show_instruction {| switch i32 %val, label %otherwise [ i32 0, label %onzero
+  test_parse
+    parse_instruction
+    Ast.show_instruction
+    {| switch i32 %val, label %otherwise [ i32 0, label %onzero
   i32 1, label %onone
   i32 2, label %ontwo ] |};
-  [%expect{|
+  [%expect
+    {|
     (Terminator
        (Switch ((TInteger 32), (FromVariable ((LocalVar "val"), (TInteger 32))),
           (FromVariable ((LocalVar "otherwise"), TLabel)),
@@ -179,6 +198,32 @@ let%expect_test _ =
           ))) |}]
 ;;
 
+
+let%expect_test _ =
+  test_parse
+    parse_instruction
+    Ast.show_instruction
+    {| indirectbr ptr %Addr, [ label %bb1, label %bb2, label %bb3 ] |};
+  [%expect
+    {|
+    (Terminator (Indirectbr (FromVariable ((LocalVar "Addr"), TPointer)))) |}]
+;;
+
+let%expect_test _ =
+  test_parse
+    parse_instruction
+    Ast.show_instruction
+    {| unreachable |};
+  [%expect
+    {|
+    (Terminator Unreachable) |}]
+;;
+
+
+
+(* ##########################################################*)
+(* #################### BINARY ##############################*)
+(* ##########################################################*)
 
 let%expect_test _ =
   test_parse parse_instruction Ast.show_instruction "  %9 = sub i32 %8, 1";
@@ -202,6 +247,11 @@ let%expect_test _ =
            (FromVariable ((LocalVar "11"), (TInteger 32)))))) |}]
 ;;
 
+
+(* ##########################################################*)
+(* ##################### OTHER ##############################*)
+(* ##########################################################*)
+
 let%expect_test _ =
   test_parse parse_instruction Ast.show_instruction "   %10 = call i32 @fac(i32 %9)  ";
   [%expect
@@ -221,6 +271,10 @@ let%expect_test _ =
           (FromVariable ((LocalVar "4"), (TInteger 32))),
           (Const (CInteger (32, 1)))))) |}]
 ;;
+
+(* ##########################################################*)
+(* ################ MEMORY ADDRESS ##########################*)
+(* ##########################################################*)
 
 let%expect_test _ =
   test_parse parse_instruction Ast.show_instruction "  %2 = alloca i32, align 4";
