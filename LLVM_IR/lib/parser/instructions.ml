@@ -52,20 +52,18 @@ let parse_terminator_instruction =
          <* char ']'
        in
        return (Ast.Indirectbr destination)
-  and iunreachable = 
-  word "unreachable" *> return Ast.Unreachable
-  in
+  and iunreachable = word "unreachable" *> return Ast.Unreachable in
   whitespaces *> choice [ iret; ibr; ibr_cond; iswitch; iindirectbr; iunreachable ]
 ;;
 
-let parse_unary_operation = 
+let parse_unary_operation =
   let ifneg =
-    let* res_var = parse_instruction_result in 
+    let* res_var = parse_instruction_result in
     let* tp, value = whitespaces *> word "fneg" *> whitespaces *> parse_type_with_value in
-    return (Ast.Fneg(res_var, tp, value))
+    return (Ast.Fneg (res_var, tp, value))
   in
   whitespaces *> choice [ ifneg ]
-  
+;;
 
 let parse_binary_operation =
   let help (mnem : string) (bin_op : Ast.binary_operation_body -> Ast.binary_operation) =
@@ -89,6 +87,28 @@ let parse_binary_operation =
        ; help "urem" (fun x -> Ast.Urem x)
        ; help "srem" (fun x -> Ast.Srem x)
        ; help "frem" (fun x -> Ast.Frem x)
+       ]
+;;
+
+let parse_bitwise_binary_operation =
+  let help
+    (mnem : string)
+    (bin_op : Ast.binary_operation_body -> Ast.bitwise_binary_operation)
+    =
+    parse_instruction_result
+    >>= fun var ->
+    whitespaces *> word mnem *> whitespaces *> parse_type_with_value2
+    >>= function
+    | tp, v1, v2 -> return (bin_op (var, tp, v1, v2))
+  in
+  whitespaces
+  *> choice
+       [ help "shl" (fun x -> Ast.Shl x)
+       ; help "lshr" (fun x -> Ast.Lshr x)
+       ; help "ashr" (fun x -> Ast.Ashr x)
+       ; help "and" (fun x -> Ast.And x)
+       ; help "or" (fun x -> Ast.Or x)
+       ; help "xor" (fun x -> Ast.Xor x)
        ]
 ;;
 
@@ -153,6 +173,7 @@ let parse_instruction : Ast.instruction t =
     [ (parse_terminator_instruction >>| fun ins -> Ast.Terminator ins)
     ; (parse_unary_operation >>| fun ins -> Ast.Unary ins)
     ; (parse_binary_operation >>| fun ins -> Ast.Binary ins)
+    ; (parse_bitwise_binary_operation >>| fun ins -> Ast.BitwiseBinary ins)
     ; (parse_other_operation >>| fun ins -> Ast.Other ins)
     ; (parse_memory_instruction >>| fun ins -> Ast.MemoryAddress ins)
     ]
@@ -208,7 +229,6 @@ let%expect_test _ =
           ))) |}]
 ;;
 
-
 let%expect_test _ =
   test_parse
     parse_instruction
@@ -220,25 +240,17 @@ let%expect_test _ =
 ;;
 
 let%expect_test _ =
-  test_parse
-    parse_instruction
-    Ast.show_instruction
-    {| unreachable |};
-  [%expect
-    {|
+  test_parse parse_instruction Ast.show_instruction {| unreachable |};
+  [%expect {|
     (Terminator Unreachable) |}]
 ;;
-
 
 (* ##########################################################*)
 (* ##################### UNARY ##############################*)
 (* ##########################################################*)
 
 let%expect_test _ =
-  test_parse
-    parse_instruction
-    Ast.show_instruction
-    {| %23 = fneg float %val   |};
+  test_parse parse_instruction Ast.show_instruction {| %23 = fneg float %val   |};
   [%expect
     {|
     (Unary
@@ -272,6 +284,29 @@ let%expect_test _ =
            (FromVariable ((LocalVar "11"), (TInteger 32)))))) |}]
 ;;
 
+(* ##########################################################*)
+(* #################### BITWISE #############################*)
+(* ########################################################## *)
+
+let%expect_test _ =
+  test_parse parse_instruction Ast.show_instruction "  %res =  xor i32 0x1A, %var ";
+  [%expect
+    {|
+      (BitwiseBinary
+         (Xor
+            ((LocalVar "res"), (TInteger 32), (Const (CInteger (32, 26))),
+             (FromVariable ((LocalVar "var"), (TInteger 32)))))) |}]
+;;
+
+let%expect_test _ =
+  test_parse parse_instruction Ast.show_instruction "  %res = ashr i8 -4, -0x23 ";
+  [%expect
+    {|
+      (BitwiseBinary
+         (Ashr
+            ((LocalVar "res"), (TInteger 8), (Const (CInteger (8, 252))),
+             (Const (CInteger (8, 221)))))) |}]
+;;
 
 (* ##########################################################*)
 (* ##################### OTHER ##############################*)

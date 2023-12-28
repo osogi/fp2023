@@ -84,6 +84,15 @@ and binary_operation =
   | Frem of binary_operation_body
 [@@deriving show { with_path = false }]
 
+and bitwise_binary_operation =
+  | Shl of binary_operation_body
+  | Lshr of binary_operation_body
+  | Ashr of binary_operation_body
+  | And of binary_operation_body
+  | Or of binary_operation_body
+  | Xor of binary_operation_body
+[@@deriving show { with_path = false }]
+
 and other_operation =
   | Icmp of variable * string * tp * value * value
   (** <result> = icmp <cond> <ty> <op1>, <op2> *)
@@ -102,6 +111,7 @@ and instruction =
   | Terminator of terminator_instruction
   | Unary of unary_operation
   | Binary of binary_operation
+  | BitwiseBinary of bitwise_binary_operation
   | Other of other_operation
   | MemoryAddress of memory_address_inst
 (* | Unary
