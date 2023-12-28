@@ -62,6 +62,9 @@ and terminator_instruction =
   | Unreachable (** unreachable *)
 [@@deriving show { with_path = false }]
 
+and unary_operation = Fneg of variable * tp * value (** <result> = fneg <ty> <op1> *)
+[@@deriving show { with_path = false }]
+
 and binary_operation_body =
   variable * tp * value * value (* <result> = <bin_op> <ty> <val1>, <val2> *)
 [@@deriving show { with_path = false }]
@@ -97,6 +100,7 @@ and memory_address_inst =
 
 and instruction =
   | Terminator of terminator_instruction
+  | Unary of unary_operation
   | Binary of binary_operation
   | Other of other_operation
   | MemoryAddress of memory_address_inst

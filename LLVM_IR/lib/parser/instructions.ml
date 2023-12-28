@@ -58,6 +58,15 @@ let parse_terminator_instruction =
   whitespaces *> choice [ iret; ibr; ibr_cond; iswitch; iindirectbr; iunreachable ]
 ;;
 
+let parse_unary_operation = 
+  let ifneg =
+    let* res_var = parse_instruction_result in 
+    let* tp, value = whitespaces *> word "fneg" *> whitespaces *> parse_type_with_value in
+    return (Ast.Fneg(res_var, tp, value))
+  in
+  whitespaces *> choice [ ifneg ]
+  
+
 let parse_binary_operation =
   let help (mnem : string) (bin_op : Ast.binary_operation_body -> Ast.binary_operation) =
     parse_instruction_result
@@ -142,6 +151,7 @@ let parse_memory_instruction =
 let parse_instruction : Ast.instruction t =
   choice
     [ (parse_terminator_instruction >>| fun ins -> Ast.Terminator ins)
+    ; (parse_unary_operation >>| fun ins -> Ast.Unary ins)
     ; (parse_binary_operation >>| fun ins -> Ast.Binary ins)
     ; (parse_other_operation >>| fun ins -> Ast.Other ins)
     ; (parse_memory_instruction >>| fun ins -> Ast.MemoryAddress ins)
@@ -220,6 +230,21 @@ let%expect_test _ =
 ;;
 
 
+(* ##########################################################*)
+(* ##################### UNARY ##############################*)
+(* ##########################################################*)
+
+let%expect_test _ =
+  test_parse
+    parse_instruction
+    Ast.show_instruction
+    {| %23 = fneg float %val   |};
+  [%expect
+    {|
+    (Unary
+       (Fneg ((LocalVar "23"), TFloat, (FromVariable ((LocalVar "val"), TFloat))
+          ))) |}]
+;;
 
 (* ##########################################################*)
 (* #################### BINARY ##############################*)
