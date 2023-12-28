@@ -220,8 +220,14 @@ let parse_memory_instruction =
       (whitespaces *> word "load" *> parse_main_type)
       (comma *> type_with_value Ast.TPointer)
       parse_align
+  and igetelementptr =
+    let* res_var = parse_instruction_result in
+    let* res_tp = whitespaces *> word "getelementptr" *> parse_additional_type <* comma in
+    let* ptr_tp, ptr_val = parse_type_with_value in
+    let* index_lst = choice [ comma *> sep_by1 comma parse_type_with_value; return [] ] in
+    return (Ast.Getelementptr (res_var, res_tp, ptr_tp, ptr_val, index_lst))
   in
-  whitespaces *> choice [ ialloca; istore; iload ]
+  whitespaces *> choice [ ialloca; istore; iload; igetelementptr ]
 ;;
 
 let parse_instruction : Ast.instruction t =
@@ -524,4 +530,58 @@ let%expect_test _ =
       (MemoryAddress
          (Store ((TInteger 32), (FromVariable ((LocalVar "12"), (TInteger 32))),
             (FromVariable ((LocalVar "2"), TPointer)), 4))) |}]
+;;
+
+let%expect_test _ =
+  test_parse
+    parse_instruction
+    Ast.show_instruction
+    "%vptr = getelementptr {i32, <2 x i8>}, ptr %svptr, i64 0, i32 1, i32 1";
+  [%expect
+    {|
+    (MemoryAddress
+       (Getelementptr ((LocalVar "vptr"),
+          (TStruct [(TInteger 32); (TVector (2, (TInteger 8)))]), TPointer,
+          (FromVariable ((LocalVar "svptr"), TPointer)),
+          [((TInteger 64), (Const (CInteger (64, 0))));
+            ((TInteger 32), (Const (CInteger (32, 1))));
+            ((TInteger 32), (Const (CInteger (32, 1))))]
+          ))) |}]
+;;
+
+let%expect_test _ =
+  test_parse
+    parse_instruction
+    Ast.show_instruction
+    "%vptr = getelementptr  i32, <4 x ptr> %vs, <4 x i64> %vind1,\n\
+    \    <4 x i32> <i32 2, i32 2, i32 2, i32 2>,\n\
+    \    <4 x i32> <i32 1, i32 1, i32 1, i32 1>,\n\
+    \    <4 x i32> %vind4,\n\
+    \    <4 x i64> <i64 13, i64 13, i64 13, i64 13>";
+  [%expect
+    {|
+    (MemoryAddress
+       (Getelementptr ((LocalVar "vptr"), (TInteger 32), (TVector (4, TPointer)),
+          (FromVariable ((LocalVar "vs"), (TVector (4, TPointer)))),
+          [((TVector (4, (TInteger 64))),
+            (FromVariable ((LocalVar "vind1"), (TVector (4, (TInteger 64))))));
+            ((TVector (4, (TInteger 32))),
+             (Const
+                (CVector
+                   [(CInteger (32, 2)); (CInteger (32, 2)); (CInteger (32, 2));
+                     (CInteger (32, 2))])));
+            ((TVector (4, (TInteger 32))),
+             (Const
+                (CVector
+                   [(CInteger (32, 1)); (CInteger (32, 1)); (CInteger (32, 1));
+                     (CInteger (32, 1))])));
+            ((TVector (4, (TInteger 32))),
+             (FromVariable ((LocalVar "vind4"), (TVector (4, (TInteger 32))))));
+            ((TVector (4, (TInteger 64))),
+             (Const
+                (CVector
+                   [(CInteger (64, 0)); (CInteger (64, 0)); (CInteger (64, 0));
+                     (CInteger (64, 0))])))
+            ]
+          ))) |}]
 ;;
