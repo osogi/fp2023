@@ -93,7 +93,7 @@ and bitwise_binary_operation =
   | Xor of binary_operation_body
 [@@deriving show { with_path = false }]
 
-and vector_instructions =
+and vector_instruction =
   | Extractelement of variable * tp * value * tp * value
   (** <result> = extractelement <n x <ty>> <val>, <ty2> <idx> *)
   | Insertelement of variable * tp * value * value * tp * value
@@ -102,13 +102,19 @@ and vector_instructions =
   (** <result> = shufflevector <n x <ty>> <v1>, <n x <ty>> <v2>, <m x i32> <mask> *)
 [@@deriving show { with_path = false }]
 
+and aggregate_instruction =
+  | Extractvalue of variable * tp * value * int list
+  (** <result> = extractvalue <aggregate type> <val>, <idx>{, <idx>}* *)
+  | Insertvalue of variable * tp * value * tp * value * int list
+  (** <result> = insertvalue <aggregate type> <val>, <ty> <elt>, <idx>{, <idx>}* *)
+
 and other_operation =
   | Icmp of variable * string * tp * value * value
   (** <result> = icmp <cond> <ty> <op1>, <op2> *)
   | Call of variable * tp * value * value list
   (** <result> = call <ty> <fnptrval>(<function args>) *)
 
-and memory_address_inst =
+and memory_address_instruction =
   | Alloca of variable * tp * value * align
   (** <result> = alloca <type> [, <ty> <NumElements>] [, align <alignment>] *)
   | Store of tp * value * value * align
@@ -121,15 +127,10 @@ and instruction =
   | Unary of unary_operation
   | Binary of binary_operation
   | BitwiseBinary of bitwise_binary_operation
-  | Vector of vector_instructions
+  | Vector of vector_instruction
+  | Aggregate of aggregate_instruction
   | Other of other_operation
-  | MemoryAddress of memory_address_inst
-(* | Unary
-   | BitwiseBinary
-   | Vector
-   | Aggregate
-   | Conversion
-*)
+  | MemoryAddress of memory_address_instruction
 [@@deriving show { with_path = true }]
 (* ############ Instructions End ########### *)
 
