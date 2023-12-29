@@ -7,7 +7,7 @@ define i32 @ds() {
   store i32 5, ptr %1, align 4
   %2 = load i32, ptr %1, align 4
   %3 = load i32, ptr @bb, align 4
-  %4 = add i32 %3, %2
+  %4 = add nsw i32 %3, %2
   store i32 %4, ptr @bb, align 4
   %5 = load i32, ptr @dd, align 4
   store i32 %5, ptr %1, align 4
