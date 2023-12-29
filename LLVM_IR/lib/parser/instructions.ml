@@ -70,7 +70,13 @@ let parse_binary_operation =
   let help (mnem : string) (bin_op : Ast.binary_operation_body -> Ast.binary_operation) =
     parse_instruction_result
     >>= fun var ->
-    whitespaces *> word mnem *> whitespaces *> parse_type_with_value2
+    whitespaces
+    *> word mnem
+    *> whitespaces
+    *> option [] (word "nuw" *> whitespaces)
+    *> option [] (word "nsw" *> whitespaces)
+    *> whitespaces
+    *> parse_type_with_value2
     >>= function
     | tp, v1, v2 -> return (bin_op (var, tp, v1, v2))
   in
