@@ -73,6 +73,73 @@ SPDX-License-Identifier: CC0-1.0
                        (FromVariable ((LocalVar "14"), (TInteger 32))))))
                  ]))
            ]
-         }))
-    ]
+         }),
+    1)]
  
+  $ ./demoParse.exe < ./attachments/test.ll
+  [((TInteger 32), (GlobalVar "dd"), (CInteger (32, 0)), 4);
+    ((TInteger 32), (GlobalVar "bb"), (CInteger (32, 32)), 4);
+    ((TFunc ((TInteger 32), [])), (GlobalVar "ds"),
+     (CFunc
+        { parameters = [];
+          basic_blocks =
+          [((LocalVar "<start>"),
+            (CLabel
+               [(MemoryAddress
+                   (Alloca ((LocalVar "1"), (TInteger 32),
+                      (Const (CInteger (1, 1))), 4)));
+                 (MemoryAddress
+                    (Store ((TInteger 32), (Const (CInteger (32, 5))),
+                       (FromVariable ((LocalVar "1"), TPointer)), 4)));
+                 (MemoryAddress
+                    (Load ((LocalVar "2"), (TInteger 32),
+                       (FromVariable ((LocalVar "1"), TPointer)), 4)));
+                 (MemoryAddress
+                    (Load ((LocalVar "3"), (TInteger 32),
+                       (Const (CPointer (PointerGlob (GlobalVar "bb")))), 4)));
+                 (Binary
+                    (Add
+                       ((LocalVar "4"), (TInteger 32),
+                        (FromVariable ((LocalVar "3"), (TInteger 32))),
+                        (FromVariable ((LocalVar "2"), (TInteger 32))))));
+                 (MemoryAddress
+                    (Store ((TInteger 32),
+                       (FromVariable ((LocalVar "4"), (TInteger 32))),
+                       (Const (CPointer (PointerGlob (GlobalVar "bb")))), 4)));
+                 (MemoryAddress
+                    (Load ((LocalVar "5"), (TInteger 32),
+                       (Const (CPointer (PointerGlob (GlobalVar "dd")))), 4)));
+                 (MemoryAddress
+                    (Store ((TInteger 32),
+                       (FromVariable ((LocalVar "5"), (TInteger 32))),
+                       (FromVariable ((LocalVar "1"), TPointer)), 4)));
+                 (MemoryAddress
+                    (Load ((LocalVar "6"), (TInteger 32),
+                       (FromVariable ((LocalVar "1"), TPointer)), 4)));
+                 (Terminator
+                    (Ret ((TInteger 32),
+                       (FromVariable ((LocalVar "6"), (TInteger 32))))))
+                 ]))
+            ]
+          }),
+     1);
+    ((TFunc ((TInteger 32), [])), (GlobalVar "main"),
+     (CFunc
+        { parameters = [];
+          basic_blocks =
+          [((LocalVar "<start>"),
+            (CLabel
+               [(Other
+                   (Call ((LocalVar "1"), (TInteger 32),
+                      (Const (CPointer (PointerGlob (GlobalVar "ds")))), 
+                      [])));
+                 (Other
+                    (Call ((LocalVar "2"), (TInteger 32),
+                       (Const (CPointer (PointerGlob (GlobalVar "ds")))), 
+                       [])));
+                 (Terminator (Ret ((TInteger 32), (Const (CInteger (32, 0))))))
+                 ]))
+            ]
+          }),
+     1)
+    ]
