@@ -5,6 +5,7 @@
 open Angstrom
 open Common
 open Types
+open Values
 
 type func_annotation =
   { self : Ast.variable
@@ -96,10 +97,18 @@ let parse_function =
   return
     ( annot.tp
     , annot.self
-    , Ast.CFunc ({ parameters = annot.parameters; basic_blocks = bbs } : Ast.func) )
+    , Ast.CFunc ({ parameters = annot.parameters; basic_blocks = bbs } : Ast.func), 1 )
 ;;
 
-let start_parse : Ast.glob_list t = many (choice [ parse_function ])
+let parse_glob_var = 
+  let* variable = whitespaces *>  parse_global_variable <* whitespaces <* char '=' in 
+  let* tp = whitespaces *> word "global" *> whitespaces *> parse_main_type in 
+  let* const = whitespaces *> parse_const tp in
+  let* alignment = Instructions.parse_align in
+  return (tp, variable, const, alignment)
+(*@dd = global i32 0, align 4 *)
+
+let start_parse : Ast.glob_list t = many (choice [ parse_function; parse_glob_var ])
 
 let parse_program prog =
   match Angstrom.parse_string ~consume:Consume.Prefix start_parse prog with

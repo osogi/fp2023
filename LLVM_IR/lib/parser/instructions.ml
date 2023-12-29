@@ -8,6 +8,7 @@ open Values
 open Types
 
 let parse_instruction_result = parse_local_variable <* whitespaces <* char '='
+let parse_align = comma *> word "align" *> whitespaces *> parse_integer <|> return 1
 
 let parse_terminator_instruction =
   let iret =
@@ -169,7 +170,6 @@ let parse_aggregate_instruction =
 ;;
 
 let parse_memory_instruction =
-  let parse_align = comma *> word "align" *> whitespaces *> parse_integer <|> return 1 in
   let ialloca =
     lift4
       (fun var tp value align -> Ast.Alloca (var, tp, value, align))
