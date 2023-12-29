@@ -6,4 +6,4 @@
 
 (cram
  (applies_to parsingTests)
- (deps ./demoParse.exe ./attachments/fac.ll))
+ (deps ./demoParse.exe ./attachments/fac.ll ./attachments/test.ll))

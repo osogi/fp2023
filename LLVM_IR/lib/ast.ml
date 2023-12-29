@@ -165,4 +165,4 @@ and func =
   }
 [@@deriving show { with_path = false }]
 
-type glob_list = (tp * variable * const) list [@@deriving show { with_path = false }]
+type glob_list = (tp * variable * const * int) list [@@deriving show { with_path = false }]
