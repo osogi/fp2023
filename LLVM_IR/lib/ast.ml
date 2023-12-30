@@ -165,4 +165,23 @@ and func =
   }
 [@@deriving show { with_path = false }]
 
-type glob_list = (tp * variable * const * int) list [@@deriving show { with_path = false }]
+type glob_list = (tp * variable * const * int) list
+[@@deriving show { with_path = false }]
+
+let rec const_to_tp : const -> tp = function
+  | CVoid -> TVoid
+  | CInteger (size, _) -> TInteger size
+  | CFloat _ -> TFloat
+  | CPointer _ -> TPointer
+  | CVector lst ->
+    (match lst with
+     | h :: _ -> TVector (List.length lst, const_to_tp h)
+     | [] -> TVector (List.length lst, TVoid))
+  | CArr lst ->
+    (match lst with
+     | h :: _ -> TArr (List.length lst, const_to_tp h)
+     | [] -> TArr (List.length lst, TVoid))
+  | CStruct lst -> TStruct (List.map const_to_tp lst)
+  | CLabel _ -> TLabel
+  | _ -> TVoid
+;;
