@@ -27,9 +27,7 @@ end
 type map_heap = char MapInt.t [@@deriving show { with_path = false }]
 type map_var = Ast.const MapString.t [@@deriving show { with_path = false }]
 type bytes = (int * char) Seq.t
-type state = map_var * map_var * map_heap
-
-
+type state = map_var * map_var * map_heap * int (*local glob heap stack_pointer*)
 
 let read_var : Ast.variable -> (state, Ast.const) t =
   let find_var name map =
@@ -39,22 +37,24 @@ let read_var : Ast.variable -> (state, Ast.const) t =
     | None -> fail (Printf.sprintf "Runtime error: Variable %s is not initialized" name)
   in
   fun variable ->
-    let* local, glob, _ = read in
+    let* local, glob, _, _ = read in
     match variable with
     | Ast.GlobalVar name -> find_var name glob
     | Ast.LocalVar name -> find_var name local
 ;;
 
 let write_var : Ast.variable * Ast.const -> state -> (state, unit) t =
-  fun (key, value) (old_local, old_global, old_heap) ->
+  fun (key, value) (old_local, old_global, old_heap, old_stack) ->
   match key with
-  | Ast.GlobalVar name -> write (old_local, MapString.add name value old_global, old_heap)
-  | Ast.LocalVar name -> write (MapString.add name value old_local, old_global, old_heap)
+  | Ast.GlobalVar name ->
+    write (old_local, MapString.add name value old_global, old_heap, old_stack)
+  | Ast.LocalVar name ->
+    write (MapString.add name value old_local, old_global, old_heap, old_stack)
 ;;
 
 let read_byte : int -> (state, char) t =
   fun number ->
-  let* _, _, heap = read in
+  let* _, _, heap, _ = read in
   let bt = MapInt.find_opt number heap in
   match bt with
   | Some x -> return x
@@ -65,12 +65,11 @@ let read_byte : int -> (state, char) t =
 let read_bytes : int -> int -> (state, char list) t =
   fun first len ->
   let read_right_byte num = read_byte (first + num) in
-  let buf_list = List.init len (fun x-> x) in
+  let buf_list = List.init len (fun x -> x) in
   map_list read_right_byte buf_list
- 
 ;;
 
 let write_bytes : bytes -> state -> (state, unit) t =
-  fun bts (old_local, old_global, old_heap) ->
-  write (old_local, old_global, MapInt.add_seq bts old_heap)
+  fun bts (old_local, old_global, old_heap, old_stack) ->
+  write (old_local, old_global, MapInt.add_seq bts old_heap, old_stack)
 ;;

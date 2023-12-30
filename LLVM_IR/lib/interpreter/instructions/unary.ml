@@ -3,7 +3,7 @@
 (** SPDX-License-Identifier: CC0-1.0 *)
 
 open State
-open Instructions_common
+open Common_interp_instructions
 (* 
 let ifneg res_var tp value =  let* cnst = (get_const_from_value value) in
    
