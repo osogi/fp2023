@@ -90,7 +90,7 @@ let parse_function_body =
 ;;
 
 let parse_function =
-  whitespaces *> word "define" *> parse_function_annotation
+  whitespaces *> word "define" *> (parse_function_annotation)
   >>= fun annot ->
   parse_function_body
   >>= fun bbs ->
@@ -108,10 +108,10 @@ let parse_glob_var =
   return (tp, variable, const, alignment)
 (*@dd = global i32 0, align 4 *)
 
-let start_parse : Ast.glob_list t = many (choice [ parse_function; parse_glob_var ])
+let start_parse : Ast.glob_list t = many (choice [ parse_function; parse_glob_var ]) <* whitespaces
 
 let parse_program prog =
-  match Angstrom.parse_string ~consume:Consume.Prefix start_parse prog with
+  match Angstrom.parse_string ~consume:Consume.All start_parse prog with
   | Result.Error e -> Result.Error e
-  | Result.Ok lst -> Result.Ok (Ast.show_glob_list lst)
+  | Result.Ok lst -> Result.Ok lst
 ;;

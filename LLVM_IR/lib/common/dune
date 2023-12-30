@@ -1,0 +1,16 @@
+(library
+ (name common)
+ (public_name LLVM_IR.Common)
+ (modules stateMonad)
+)
+
+
+; (library
+;  (name tests)
+;  (modules tests)
+;  (libraries lambda_lib)
+;  (preprocess
+;   (pps ppx_expect ppx_deriving.show))
+;  (instrumentation
+;   (backend bisect_ppx))
+;  (inline_tests))
