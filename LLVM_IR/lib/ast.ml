@@ -36,7 +36,7 @@ type align = int (* just for better reading*) [@@deriving show { with_path = fal
 
 type const =
   | CVoid
-  | CInteger of int * int (** size and value*)
+  | CInteger of int * Int64.t (** size and value*)
   | CFloat of float
   | CPointer of pointer_const
   | CVector of const list (** <const, const, ...> *)

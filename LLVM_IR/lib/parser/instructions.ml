@@ -185,7 +185,7 @@ let parse_memory_instruction =
        >>= (function
               | Ast.TInteger _, value -> return value
               | _ -> fail "Parser error: excepted integer type")
-       <|> return (Ast.Const (Ast.CInteger (1, 1))))
+       <|> return (Ast.Const (Ast.CInteger (1, 1L))))
       (whitespaces *> parse_align)
   and istore =
     lift3
@@ -345,11 +345,11 @@ let%expect_test _ =
     (Terminator
        (Switch ((TInteger 32), (FromVariable ((LocalVar "val"), (TInteger 32))),
           (FromVariable ((LocalVar "otherwise"), TLabel)),
-          [((Const (CInteger (32, 0))),
+          [((Const (CInteger (32, 0L))),
             (FromVariable ((LocalVar "onzero"), TLabel)));
-            ((Const (CInteger (32, 1))),
+            ((Const (CInteger (32, 1L))),
              (FromVariable ((LocalVar "onone"), TLabel)));
-            ((Const (CInteger (32, 2))),
+            ((Const (CInteger (32, 2L))),
              (FromVariable ((LocalVar "ontwo"), TLabel)))
             ]
           ))) |}]
@@ -396,7 +396,7 @@ let%expect_test _ =
        (Sub
           ((LocalVar "9"), (TInteger 32),
            (FromVariable ((LocalVar "8"), (TInteger 32))),
-           (Const (CInteger (32, 1)))))) |}]
+           (Const (CInteger (32, 1L)))))) |}]
 ;;
 
 let%expect_test _ =
@@ -420,7 +420,7 @@ let%expect_test _ =
     {|
       (BitwiseBinary
          (Xor
-            ((LocalVar "res"), (TInteger 32), (Const (CInteger (32, 26))),
+            ((LocalVar "res"), (TInteger 32), (Const (CInteger (32, 26L))),
              (FromVariable ((LocalVar "var"), (TInteger 32)))))) |}]
 ;;
 
@@ -430,8 +430,8 @@ let%expect_test _ =
     {|
       (BitwiseBinary
          (Ashr
-            ((LocalVar "res"), (TInteger 8), (Const (CInteger (8, 252))),
-             (Const (CInteger (8, 221)))))) |}]
+            ((LocalVar "res"), (TInteger 8), (Const (CInteger (8, 124L))),
+             (Const (CInteger (8, 93L)))))) |}]
 ;;
 
 (* ##########################################################*)
@@ -448,7 +448,7 @@ let%expect_test _ =
       (Vector
          (Extractelement ((LocalVar "result"), (TVector (4, (TInteger 32))),
             (FromVariable ((LocalVar "vec"), (TVector (4, (TInteger 32))))),
-            (TInteger 32), (Const (CInteger (32, 0)))))) |}]
+            (TInteger 32), (Const (CInteger (32, 0L)))))) |}]
 ;;
 
 let%expect_test _ =
@@ -461,7 +461,8 @@ let%expect_test _ =
       (Vector
          (Insertelement ((LocalVar "result"), (TVector (4, (TInteger 32))),
             (FromVariable ((LocalVar "vec"), (TVector (4, (TInteger 32))))),
-            (Const (CInteger (32, 1))), (TInteger 32), (Const (CInteger (32, 0)))))) |}]
+            (Const (CInteger (32, 1L))), (TInteger 32), (Const (CInteger (32, 0L)))
+            ))) |}]
 ;;
 
 let%expect_test _ =
@@ -477,9 +478,9 @@ let%expect_test _ =
             (FromVariable ((LocalVar "v1"), (TVector (4, (TInteger 32))))),
             (FromVariable ((LocalVar "v2"), (TVector (4, (TInteger 32))))), 8,
             (CVector
-               [(CInteger (32, 0)); (CInteger (32, 1)); (CInteger (32, 2));
-                 (CInteger (32, 3)); (CInteger (32, 4)); (CInteger (32, 5));
-                 (CInteger (32, 6)); (CInteger (32, 7))])
+               [(CInteger (32, 0L)); (CInteger (32, 1L)); (CInteger (32, 2L));
+                 (CInteger (32, 3L)); (CInteger (32, 4L)); (CInteger (32, 5L));
+                 (CInteger (32, 6L)); (CInteger (32, 7L))])
             ))) |}]
 ;;
 
@@ -524,7 +525,7 @@ let%expect_test _ =
   [%expect
     {|
       (MemoryAddress
-         (Alloca ((LocalVar "2"), (TInteger 32), (Const (CInteger (1, 1))), 4))) |}]
+         (Alloca ((LocalVar "2"), (TInteger 32), (Const (CInteger (1, 1L))), 4))) |}]
 ;;
 
 let%expect_test _ =
@@ -532,7 +533,7 @@ let%expect_test _ =
   [%expect
     {|
       (MemoryAddress
-         (Alloca ((LocalVar "2"), (TInteger 32), (Const (CInteger (1, 1))), 1))) |}]
+         (Alloca ((LocalVar "2"), (TInteger 32), (Const (CInteger (1, 1L))), 1))) |}]
 ;;
 
 let%expect_test _ =
@@ -540,7 +541,7 @@ let%expect_test _ =
   [%expect
     {|
       (MemoryAddress
-         (Alloca ((LocalVar "2"), (TInteger 32), (Const (CInteger (32, 4))), 4))) |}]
+         (Alloca ((LocalVar "2"), (TInteger 32), (Const (CInteger (32, 4L))), 4))) |}]
 ;;
 
 let%expect_test _ =
@@ -581,9 +582,9 @@ let%expect_test _ =
        (Getelementptr ((LocalVar "vptr"),
           (TStruct [(TInteger 32); (TVector (2, (TInteger 8)))]), TPointer,
           (FromVariable ((LocalVar "svptr"), TPointer)),
-          [((TInteger 64), (Const (CInteger (64, 0))));
-            ((TInteger 32), (Const (CInteger (32, 1))));
-            ((TInteger 32), (Const (CInteger (32, 1))))]
+          [((TInteger 64), (Const (CInteger (64, 0L))));
+            ((TInteger 32), (Const (CInteger (32, 1L))));
+            ((TInteger 32), (Const (CInteger (32, 1L))))]
           ))) |}]
 ;;
 
@@ -606,20 +607,20 @@ let%expect_test _ =
             ((TVector (4, (TInteger 32))),
              (Const
                 (CVector
-                   [(CInteger (32, 2)); (CInteger (32, 2)); (CInteger (32, 2));
-                     (CInteger (32, 2))])));
+                   [(CInteger (32, 2L)); (CInteger (32, 2L));
+                     (CInteger (32, 2L)); (CInteger (32, 2L))])));
             ((TVector (4, (TInteger 32))),
              (Const
                 (CVector
-                   [(CInteger (32, 1)); (CInteger (32, 1)); (CInteger (32, 1));
-                     (CInteger (32, 1))])));
+                   [(CInteger (32, 1L)); (CInteger (32, 1L));
+                     (CInteger (32, 1L)); (CInteger (32, 1L))])));
             ((TVector (4, (TInteger 32))),
              (FromVariable ((LocalVar "vind4"), (TVector (4, (TInteger 32))))));
             ((TVector (4, (TInteger 64))),
              (Const
                 (CVector
-                   [(CInteger (64, 0)); (CInteger (64, 0)); (CInteger (64, 0));
-                     (CInteger (64, 0))])))
+                   [(CInteger (64, 13L)); (CInteger (64, 13L));
+                     (CInteger (64, 13L)); (CInteger (64, 13L))])))
             ]
           ))) |}]
 ;;
@@ -634,7 +635,7 @@ let%expect_test _ =
     {|
       (Conversion
          (InttoprtTo
-            ((LocalVar "Y"), (TInteger 32), (Const (CInteger (32, 255))), TPointer))) |}]
+            ((LocalVar "Y"), (TInteger 32), (Const (CInteger (32, 255L))), TPointer))) |}]
 ;;
 
 let%expect_test _ =
@@ -655,7 +656,7 @@ let%expect_test _ =
       (Conversion
          (ZextTo
             ((LocalVar "Z"), (TVector (2, (TInteger 16))),
-             (Const (CVector [(CInteger (16, 8)); (CInteger (16, 7))])),
+             (Const (CVector [(CInteger (16, 8L)); (CInteger (16, 7L))])),
              (TVector (2, (TInteger 32)))))) |}]
 ;;
 
@@ -670,7 +671,7 @@ let%expect_test _ =
     (Other
        (Icmp ((LocalVar "5"), "slt", (TInteger 32),
           (FromVariable ((LocalVar "4"), (TInteger 32))),
-          (Const (CInteger (32, 1)))))) |}]
+          (Const (CInteger (32, 1L)))))) |}]
 ;;
 
 let%expect_test _ =
@@ -701,7 +702,7 @@ let%expect_test _ =
     {|
     (Other
        (Phi ((LocalVar "indvar"), (TInteger 32),
-          [((Const (CInteger (32, 0))),
+          [((Const (CInteger (32, 0L))),
             (FromVariable ((LocalVar "LoopHeader"), TLabel)));
             ((FromVariable ((LocalVar "nextindvar"), (TInteger 32))),
              (FromVariable ((LocalVar "Loop"), TLabel)))
@@ -714,6 +715,7 @@ let%expect_test _ =
   [%expect
     {|
       (Other
-         (Select ((LocalVar "X"), (TInteger 1), (Const (CInteger (1, 1))),
-            (TInteger 8), (Const (CInteger (8, 17))), (Const (CInteger (8, 42)))))) |}]
+         (Select ((LocalVar "X"), (TInteger 1), (Const (CInteger (1, 1L))),
+            (TInteger 8), (Const (CInteger (8, 17L))), (Const (CInteger (8, 42L)))
+            ))) |}]
 ;;
