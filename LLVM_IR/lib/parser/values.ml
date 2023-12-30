@@ -82,13 +82,13 @@ and parse_const_float =
 
 and parse_const_integer size =
   choice
-    [ (let* sign = choice [ char '-' *> return (-1); return 1 ] in
-       parse_integer >>| fun value -> Common.IrInts.create (sign * value) size)
+    [ (let* sign = choice [ char '-' *> return (-1L); return 1L ] in
+       parse_integer64 >>| fun value -> Common.IrInts.create (Int64.mul sign value) size)
     ; (if size == 1
        then
          choice
-           [ word "true" *> return (Ast.CInteger (size, 1))
-           ; word "false" *> return (Ast.CInteger (size, 0))
+           [ word "true" *> return (Ast.CInteger (size, 1L))
+           ; word "false" *> return (Ast.CInteger (size, 0L))
            ]
        else fail "Parser error: can't parse i1 const")
     ]
@@ -123,7 +123,7 @@ let%expect_test _ =
     (parse_additional_type <* whitespaces >>= fun f -> parse_value f)
     Ast.show_value
     "i1 432 ";
-  [%expect {| (Const (CInteger (1, 0))) |}]
+  [%expect {| (Const (CInteger (1, 0L))) |}]
 ;;
 
 let%expect_test _ =
@@ -139,7 +139,7 @@ let%expect_test _ =
     (parse_additional_type <* whitespaces >>= fun f -> parse_value f)
     Ast.show_value
     "{i32, float} { i32 4, float 17.0} ";
-  [%expect {| (Const (CStruct [(CInteger (32, 4)); (CFloat 17.)])) |}]
+  [%expect {| (Const (CStruct [(CInteger (32, 4L)); (CFloat 17.)])) |}]
 ;;
 
 let%expect_test _ =
@@ -151,8 +151,8 @@ let%expect_test _ =
     {|
     (Const
        (CVector
-          [(CInteger (32, 42)); (CInteger (32, 11)); (CInteger (32, 74));
-            (CInteger (32, 100))])) |}]
+          [(CInteger (32, 42L)); (CInteger (32, 11L)); (CInteger (32, 74L));
+            (CInteger (32, 100L))])) |}]
 ;;
 
 let%expect_test _ =
@@ -164,8 +164,8 @@ let%expect_test _ =
     {|
     (Const
        (CArr
-          [(CArr [(CInteger (32, 1)); (CInteger (32, 3))]);
-            (CArr [(CInteger (32, 2)); (CInteger (32, 4))])])) |}]
+          [(CArr [(CInteger (32, 1L)); (CInteger (32, 3L))]);
+            (CArr [(CInteger (32, 2L)); (CInteger (32, 4L))])])) |}]
 ;;
 
 let%expect_test _ =
