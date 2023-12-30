@@ -3,7 +3,7 @@
 (** SPDX-License-Identifier: CC0-1.0 *)
 
 open Angstrom
-open Common
+open Common_parser
 open Types
 
 let rec parse_const tp =
@@ -83,15 +83,7 @@ and parse_const_float =
 and parse_const_integer size =
   choice
     [ (let* sign = choice [ char '-' *> return (-1); return 1 ] in
-       parse_integer
-       >>| fun value ->
-       Ast.CInteger
-         ( size
-         , let modulo x y =
-             let result = x mod y in
-             if result >= 0 then result else result + y
-           in
-           modulo (sign * value) (Int.shift_left 1 size) ))
+       parse_integer >>| fun value -> Common.IrInts.create (sign * value) size)
     ; (if size == 1
        then
          choice
