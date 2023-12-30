@@ -4,7 +4,7 @@
 open SsaCheck
 
 let test_ssa str =
-  match Parser.parse_program str with
+  match Parser.Parsing.parse_program str with
   | Result.Error s -> Printf.printf "Parser error: \n %s" s
   | Result.Ok glob_lst ->
     (match run (ssa_glob_list glob_lst) (MapString.empty, MapString.empty) with

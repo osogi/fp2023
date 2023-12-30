@@ -4,8 +4,13 @@
 
 open Angstrom
 
+
+
+let test_parse_res p str =
+  Angstrom.parse_string ~consume:Consume.Prefix p str
+;;
 let test_parse p show str =
-  match Angstrom.parse_string ~consume:Consume.Prefix p str with
+  match test_parse_res p str with
   | Result.Error _ -> Format.printf "Error"
   | Result.Ok ast -> Format.printf "%s" (show ast)
 ;;
@@ -61,13 +66,15 @@ let word str =
   >>= fun parsed -> if parsed = str then return str else fail "Parser error: Wrong word"
 ;;
 
-let parse_integer =
+let parse_integer64 =
   let* prefix = choice [ string "0x"; string "0o"; string "0b"; return "" ] in
   let* int_body = str_extended_integer in
-  match int_of_string_opt (String.concat "" [ prefix; int_body ]) with
+  match Int64.of_string_opt (String.concat "" [ prefix; int_body ]) with
   | Some x -> return x
   | None -> fail "Parser error: can't parse int"
 ;;
+
+let parse_integer = parse_integer64 >>| Int64.to_int
 
 let parse_named_name =
   lift2

@@ -1,7 +1,7 @@
 (library
  (name parser)
  (public_name LLVM_IR.Parser)
- (modules common_parser parser types values instructions)
+ (modules common_parser parsing types values instructions)
  (libraries ast common base angstrom ppx_show.runtime)
  (inline_tests)
  (preprocess
