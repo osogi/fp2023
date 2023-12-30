@@ -2,4 +2,4 @@
 
 (** SPDX-License-Identifier: CC0-1.0 *)
 
-val parse_program : string -> (string, string) result
+val parse_program : string -> (Ast.glob_list, string) result
