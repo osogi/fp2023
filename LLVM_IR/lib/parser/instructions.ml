@@ -41,20 +41,8 @@ let parse_terminator_instruction =
          <* char ']'
        in
        return (Ast.Switch (value_type, switch_value, default_dest, switch_list))
-  and iindirectbr =
-    word "indirectbr"
-    *> let* destination = type_with_value Ast.TPointer <* comma in
-       let* _ =
-         whitespaces
-         *> char '['
-         *> whitespaces
-         *> sep_by comma (type_with_value Ast.TLabel)
-         <* whitespaces
-         <* char ']'
-       in
-       return (Ast.Indirectbr destination)
   and iunreachable = word "unreachable" *> return Ast.Unreachable in
-  whitespaces *> choice [ iret; ibr; ibr_cond; iswitch; iindirectbr; iunreachable ]
+  whitespaces *> choice [ iret; ibr; ibr_cond; iswitch; iunreachable ]
 ;;
 
 let parse_unary_operation =
@@ -353,16 +341,6 @@ let%expect_test _ =
              (FromVariable ((LocalVar "ontwo"), TLabel)))
             ]
           ))) |}]
-;;
-
-let%expect_test _ =
-  test_parse
-    parse_instruction
-    Ast.show_instruction
-    {| indirectbr ptr %Addr, [ label %bb1, label %bb2, label %bb3 ] |};
-  [%expect
-    {|
-    (Terminator (Indirectbr (FromVariable ((LocalVar "Addr"), TPointer)))) |}]
 ;;
 
 let%expect_test _ =
