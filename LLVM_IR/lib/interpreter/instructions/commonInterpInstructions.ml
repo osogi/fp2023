@@ -3,6 +3,12 @@
 (** SPDX-License-Identifier: CC0-1.0 *)
 
 open State
+type instr_launch_res = 
+| Ret of Ast.const
+| Jmp of Ast.basic_block
+| None 
+
+
 
 let get_const_from_value : Ast.value -> (state, Ast.const) t = function
   | Ast.Const x -> return x
