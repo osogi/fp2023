@@ -151,3 +151,8 @@ let ssa_glob_list : Ast.glob_list -> (state, unit) t =
   in
   map_list ssa_glob_elem glob_lst *> return ()
 ;;
+
+let run_ssa_glob_list glob_lst =
+  let _, res = run (ssa_glob_list glob_lst) (MapString.empty, MapString.empty) in
+  res
+;;
