@@ -5,6 +5,8 @@
 open State
 include CommonInterpInstructions
 
-let launch_instruction: Ast.instruction -> (state, instr_launch_res) t = function 
-| Ast.Terminator inst -> Termainator.launch_terminator_instruction inst
-| _ -> return None
+let launch_instruction : Ast.instruction -> (state, instr_launch_res) t = function
+  | Ast.Terminator inst -> Termainator.launch_terminator_instruction inst
+  | Ast.Unary inst -> Unary.launch_unary_operation inst
+  | _ -> return None
+;;

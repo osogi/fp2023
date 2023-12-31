@@ -115,12 +115,10 @@ define i32 @ds() {
 
 ; Function Attrs: noinline nounwind optnone uwtable
 define i32 @main(){
-4:
-  %1 = call i32 @ds()
-  br label %4
-3:
-  %2 = call i32 @ds()
-  ret i32 0
+  %1 = fneg <3 x float> < float 1.2,  float 3.4,  float 5.6>
+  br  label %3
+  3:
+  ret <3 x float> %1
 }
 
       |}
@@ -129,10 +127,11 @@ define i32 @main(){
       (match run (interpritate_ast x) empty_state with
        | st, Result.Ok x ->
          let loc, glob, heap, stack = st in
-         (* Printf.printf "%s" (show_map_var glob)) *)
-         Printf.printf "%s" (show_map_heap heap)
+         (* Printf.printf "%s\n" (show_map_var glob)) *)
+         (* Printf.printf "%s\n" (show_map_heap heap) *)
+         Printf.printf "%s\n" (Ast.show_const x)
        | st, Result.Error s -> Printf.printf "Error: %s!\n" s)
     | _ -> Printf.printf "Parser error\n"
   in
   true
-;; *)
+;;  *)
