@@ -3,7 +3,7 @@
 (** SPDX-License-Identifier: CC0-1.0 *)
 
 open Angstrom
-open Common_parser
+open CommonParser
 open Types
 
 let rec parse_const tp =
