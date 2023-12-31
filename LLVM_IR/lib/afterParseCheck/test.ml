@@ -7,9 +7,9 @@ let test_ssa str =
   match Parser.Parsing.parse_program str with
   | Result.Error s -> Printf.printf "Parser error: \n %s" s
   | Result.Ok glob_lst ->
-    (match run (ssa_glob_list glob_lst) (MapString.empty, MapString.empty) with
-     | _, Result.Ok _ -> Printf.printf "Pass"
-     | _, Result.Error s -> Printf.printf "SSA check failed: \n %s" s)
+    (match run_ssa_glob_list glob_lst with
+     | Result.Ok _ -> Printf.printf "Pass"
+     | Result.Error s -> Printf.printf "SSA check failed: \n %s" s)
 ;;
 
 let%expect_test _ =
@@ -100,19 +100,17 @@ let%expect_test _ =
      Variable 6 already was assignmented |}]
 ;;
 
-
 let%expect_test _ =
   test_ssa
     "define i32 @d1(i32 %0) {\n\
     \      %1 = alloca i32, align 4\n\
     \      ret i32 %6\n\
-    \    }
-    
-    define i32 @d2(i32 %0) {\n\
+    \    }\n\
+    \    \n\
+    \    define i32 @d2(i32 %0) {\n\
     \      %1 = alloca i32, align 4\n\
     \      ret i32 %6\n\
     \    }";
   [%expect {|
     Pass |}]
 ;;
-
