@@ -43,8 +43,9 @@ let read_var : Ast.variable -> (state, Ast.const) t =
     | Ast.LocalVar name -> find_var name local
 ;;
 
-let write_var : Ast.variable * Ast.const -> state -> (state, unit) t =
-  fun (key, value) (old_local, old_global, old_heap, old_stack) ->
+let write_var : Ast.variable * Ast.const -> (state, unit) t =
+  fun (key, value) ->
+  let* old_local, old_global, old_heap, old_stack = read in
   match key with
   | Ast.GlobalVar name ->
     write (old_local, MapString.add name value old_global, old_heap, old_stack)
@@ -69,7 +70,8 @@ let read_bytes : int -> int -> (state, char list) t =
   map_list read_right_byte buf_list
 ;;
 
-let write_bytes : bytes -> state -> (state, unit) t =
-  fun bts (old_local, old_global, old_heap, old_stack) ->
+let write_bytes : bytes -> (state, unit) t =
+  fun bts ->
+  let* old_local, old_global, old_heap, old_stack = read in
   write (old_local, old_global, MapInt.add_seq bts old_heap, old_stack)
 ;;
