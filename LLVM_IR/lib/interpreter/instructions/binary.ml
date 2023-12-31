@@ -71,8 +71,7 @@ let real_srem tp x y =
     let y = Common.IrInts.sget y sz in
     if Int64.equal 0L y
     then raise Division_by_zero
-    else 
-      Common.IrInts.create (Int64.rem x y) sz
+    else Common.IrInts.create (Int64.rem x y) sz
   | _ ->
     let _ = Printf.printf "Impossible error: get wrong type at urem" in
     CVoid
@@ -83,8 +82,6 @@ let real_fmul _tp x y = Ast.CFloat (Float.mul x y)
 let real_fsub _tp x y = Ast.CFloat (Float.sub x y)
 let real_fdiv _tp x y = Ast.CFloat (Float.div x y)
 let real_frem _tp x y = Ast.CFloat (Float.rem x y)
-
-
 
 let launch_binary_operation : Ast.binary_operation -> (state, instr_launch_res) t =
   fun instr ->

@@ -154,8 +154,8 @@ and instruction =
 and basic_block = instruction list [@@deriving show { with_path = false }]
 
 and func =
-  { ftp: tp 
-    ;parameters : variable list
+  { ftp : tp
+  ; parameters : variable list
   ; basic_blocks : (variable * const) list
   }
 [@@deriving show { with_path = false }]
@@ -181,14 +181,16 @@ let rec const_to_tp : const -> tp = function
   | _ -> TVoid
 ;;
 
-let rec tp_equal: tp -> tp -> bool = fun t1 t2 ->
-match t1, t2 with
-| TVoid, TVoid ->true
-| TLabel, TLabel -> true
-| TFloat, TFloat -> true 
-| TInteger x1, TInteger x2 when x1 == x2 -> true
-| TPointer, TPointer ->true
-| TVector (n1, tp1), TVector (n2, tp2) when (n1==n2) && tp_equal tp1 tp2 -> true
-| TArr (n1, tp1), TArr (n2, tp2) when (n1==n2) && tp_equal tp1 tp2 -> true
-| TStruct tps1, TStruct tps2 -> List.equal tp_equal tps1 tps2
-| _ -> false
+let rec tp_equal : tp -> tp -> bool =
+  fun t1 t2 ->
+  match t1, t2 with
+  | TVoid, TVoid -> true
+  | TLabel, TLabel -> true
+  | TFloat, TFloat -> true
+  | TInteger x1, TInteger x2 when x1 == x2 -> true
+  | TPointer, TPointer -> true
+  | TVector (n1, tp1), TVector (n2, tp2) when n1 == n2 && tp_equal tp1 tp2 -> true
+  | TArr (n1, tp1), TArr (n2, tp2) when n1 == n2 && tp_equal tp1 tp2 -> true
+  | TStruct tps1, TStruct tps2 -> List.equal tp_equal tps1 tps2
+  | _ -> false
+;;

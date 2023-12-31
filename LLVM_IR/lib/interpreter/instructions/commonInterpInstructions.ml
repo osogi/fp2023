@@ -10,16 +10,10 @@ type instr_launch_res =
   | None
 
 let err_type exp get =
-  fail
-    (Printf.sprintf
-       "expected %s, but get %s\n"
-       (Ast.show_tp exp)
-       (Ast.show_tp  get))
+  fail (Printf.sprintf "expected %s, but get %s\n" (Ast.show_tp exp) (Ast.show_tp get))
 ;;
 
-let err_type_c exp cnst =
-  err_type exp (Ast.const_to_tp cnst)
-;;
+let err_type_c exp cnst = err_type exp (Ast.const_to_tp cnst)
 
 let is_block cnst =
   match cnst with
@@ -81,7 +75,8 @@ let vectorize2 operat is_elem v1 v2 =
 let launch_binary_body_operation operat is_elem x y =
   let* x = get_const_from_value x >>= is_elem in
   let* y = get_const_from_value y >>= is_elem in
-  try return (operat x y) with Division_by_zero -> fail "Runtime error: Division by 0"
+  try return (operat x y) with
+  | Division_by_zero -> fail "Runtime error: Division by 0"
 ;;
 
 let launch_binary_body_operation_vectorizated tp operat is_elem x y =
