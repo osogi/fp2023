@@ -158,7 +158,7 @@ let%test _ = ser_test (CPointer 0x11) false
 let%test _ = ser_test (CPointer  0x40000) false
 
 let ser_parse_test str print =
-  match Parser.Common_parser.test_parse_res Parser.Values.parse_type_with_value str with
+  match Parser.CommonParser.test_parse_res Parser.Values.parse_type_with_value str with
   | Result.Ok (_, Ast.Const cnst) -> ser_test cnst print
   | _ ->
     let _ = if print then Printf.printf "Error during parse '%s'\n" str in
