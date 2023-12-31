@@ -408,8 +408,8 @@ let%expect_test _ =
     {|
       (BitwiseBinary
          (Ashr
-            ((LocalVar "res"), (TInteger 8), (Const (CInteger (8, 124L))),
-             (Const (CInteger (8, 93L)))))) |}]
+            ((LocalVar "res"), (TInteger 8), (Const (CInteger (8, 252L))),
+             (Const (CInteger (8, 221L)))))) |}]
 ;;
 
 (* ##########################################################*)
