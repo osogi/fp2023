@@ -5,8 +5,6 @@ open State
 
 open CommonInterpInstructions
 
-let real_fneg v = Ast.CFloat (Float.neg v)
-
 let real_add tp x y =
   match tp with
   | Ast.TInteger sz -> Common.IrInts.create (Int64.add x y) sz
@@ -86,10 +84,7 @@ let real_fsub _tp x y = Ast.CFloat (Float.sub x y)
 let real_fdiv _tp x y = Ast.CFloat (Float.div x y)
 let real_frem _tp x y = Ast.CFloat (Float.rem x y)
 
-let write_binop_res tp real_add is_int v1 v2 var =
-  let* res = launch_binary_body_operation_vectorizated tp real_add is_int v1 v2 in
-  write_var var res
-;;
+
 
 let launch_binary_operation : Ast.binary_operation -> (state, instr_launch_res) t =
   fun instr ->

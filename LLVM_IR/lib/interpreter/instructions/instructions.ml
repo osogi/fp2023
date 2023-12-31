@@ -9,5 +9,6 @@ let launch_instruction : Ast.instruction -> (state, instr_launch_res) t = functi
   | Ast.Terminator inst -> Termainator.launch_terminator_instruction inst
   | Ast.Unary inst -> Unary.launch_unary_operation inst
   | Ast.Binary inst -> Binary.launch_binary_operation inst
+  | Ast.BitwiseBinary inst -> Bitwise.launch_bitwise_operation inst
   | _ -> return None
 ;;
