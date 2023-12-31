@@ -49,15 +49,7 @@ and serialise : Ast.const -> char list = function
   | Ast.CVoid -> []
   | Ast.CInteger (sz, value) -> serialise_int sz value
   | Ast.CFloat flt -> serialise_flt flt
-  | Ast.CPointer cprt ->
-    (match cprt with
-     | PointerInt integer -> serialise_int 63 (Int64.of_int integer)
-     | PointerGlob _ ->
-       let _ =
-         Printf.printf
-           "Impossible error: Serialisation of uncertain pointers is not supported"
-       in
-       [])
+  | Ast.CPointer integer -> serialise_int 63 (Int64.of_int integer)
   | Ast.CVector cnst | Ast.CArr cnst | Ast.CStruct cnst -> serialise_aggregate_tp cnst
   | Ast.CLabel _ | Ast.CFunc _ ->
     let _ = Printf.printf "Imposible error: func and label can't be serealized" in
@@ -78,7 +70,7 @@ let deserialise_flt lst =
 
 let deserialise_ptr lst =
   let iflt = Int64.to_int (bytes_to_int lst) in
-  Ast.CPointer (Ast.PointerInt iflt)
+  Ast.CPointer iflt
 ;;
 
 let rec bytes_to_cnst_lst : char list -> Ast.tp list -> Ast.const list =
@@ -162,8 +154,8 @@ let%test _ = ser_test (CFloat (-21.00)) false
 let%test _ = ser_test (CFloat 30.0002) false
 let%test _ = ser_test (CFloat 30.000000000000002) false
 let%test _ = ser_test (CFloat 123.45678901234567) false
-let%test _ = ser_test (CPointer (Ast.PointerInt 0x11)) false
-let%test _ = ser_test (CPointer (Ast.PointerInt 0x40000)) false
+let%test _ = ser_test (CPointer 0x11) false
+let%test _ = ser_test (CPointer  0x40000) false
 
 let ser_parse_test str print =
   match Parser.Common_parser.test_parse_res Parser.Values.parse_type_with_value str with
