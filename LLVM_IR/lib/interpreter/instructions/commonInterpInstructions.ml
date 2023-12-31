@@ -89,3 +89,8 @@ let launch_binary_body_operation_vectorizated tp operat is_elem x y =
   | Ast.TVector (_, elem_tp) -> vectorize2 (operat elem_tp) is_elem x y
   | _ -> launch_binary_body_operation (operat tp) is_elem x y
 ;;
+
+let write_binop_res tp real_add is_int v1 v2 var =
+  let* res = launch_binary_body_operation_vectorizated tp real_add is_int v1 v2 in
+  write_var var res
+;;
