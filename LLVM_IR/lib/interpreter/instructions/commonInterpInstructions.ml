@@ -38,12 +38,26 @@ let is_int =
   | _ -> err_type (Ast.TInteger 0) cnst
 ;;
 
+let is_float =
+  fun cnst ->
+  match cnst with
+  | Ast.CFloat x -> return x
+  | _ -> err_type (Ast.TFloat) cnst
+;;
+
+let is_vector is_elem = 
+fun cnst ->
+  match cnst with
+  | Ast.CVector x -> map_list is_elem x
+  | _ -> err_type (Ast.TVector (0, Ast.TVoid)) cnst
+
+
 let get_const_from_value : Ast.value -> (state, Ast.const) t = function
   | Ast.Const x -> return x
   | Ast.FromVariable (var, exp_tp) ->
     let* cnst = read_var var in
     let real_tp = Ast.const_to_tp cnst in
-    if real_tp == exp_tp
+    if Ast.tp_equal real_tp exp_tp
     then return cnst
     else
       fail
