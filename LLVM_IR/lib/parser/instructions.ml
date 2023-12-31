@@ -680,7 +680,7 @@ let%expect_test _ =
     {|
     (Other
        (Call ((LocalVar "10"), (TInteger 32),
-          (Const (CPointer (PointerGlob (GlobalVar "fac")))),
+          (FromVariable ((GlobalVar "fac"), TPointer)),
           [(FromVariable ((LocalVar "9"), (TInteger 32)))]))) |}]
 ;;
 
