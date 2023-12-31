@@ -30,12 +30,12 @@ let ibrcond cond label1 label2 =
   if cond then real_jmp label1 else real_jmp label2
 ;;
 
-
-let real_switch sw dc cases = 
-  let case = List.find_opt (fun (x, _) -> Int64.equal x sw) cases in 
+let real_switch sw dc cases =
+  let case = List.find_opt (fun (x, _) -> Int64.equal x sw) cases in
   match case with
   | Some (_, x) -> real_jmp x
   | None -> real_jmp dc
+;;
 
 let iswitch tp switcher default_case additional_cases =
   match tp with

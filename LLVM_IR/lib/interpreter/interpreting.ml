@@ -100,10 +100,9 @@ let interp_test str =
   | _ -> Printf.printf "Parser error\n"
 ;;
 
-
-
 let%expect_test _ =
-interp_test {|  
+  interp_test
+    {|  
 ; Function Attrs: noinline nounwind optnone uwtable
 define <3 x float> @main(){
   %1 = fneg <3 x float> < float 1.2,  float -3.4,  float 5.6>
@@ -112,14 +111,13 @@ define <3 x float> @main(){
   ret <3 x float> %1
 }
       |};
-  [%expect
-    {|
+  [%expect {|
     (CVector [(CFloat -1.2); (CFloat 3.4); (CFloat -5.6)]) |}]
 ;;
 
-
 let%expect_test _ =
-interp_test {|  
+  interp_test
+    {|  
 ; Function Attrs: noinline nounwind optnone uwtable
 define <3 x float> @main(){
   %1 = fneg <3 x float> < float 1.2,  float -3.4,  float 5.6>
@@ -127,15 +125,13 @@ define <3 x float> @main(){
   ret <3 x float> %3
 }
       |};
-  [%expect
-    {|
+  [%expect {|
     (CVector [(CFloat 8.8); (CFloat 11.4); (CFloat 1.4)]) |}]
 ;;
 
-
-
 let%expect_test _ =
-interp_test {|  
+  interp_test
+    {|  
 define i4 @main(){
   %a = add i4 8, 0
   %b = add i4 2, 0
@@ -143,13 +139,12 @@ define i4 @main(){
   ret i4 %c
 }
       |};
-  [%expect
-    {| (CInteger (4, 12L)) |}]
+  [%expect {| (CInteger (4, 12L)) |}]
 ;;
 
-
 let%expect_test _ =
-interp_test {|  
+  interp_test
+    {|  
 define i4 @main(){
   %a = add i4 9, 0
   %b = add i4 2, 0
@@ -157,12 +152,12 @@ define i4 @main(){
   ret i4 %c
 }
       |};
-  [%expect
-    {| (CInteger (4, 15L)) |}]
+  [%expect {| (CInteger (4, 15L)) |}]
 ;;
 
 let%expect_test _ =
-interp_test {|  
+  interp_test
+    {|  
 define i4 @main(){
   %a = add i4 9, 0
   %b = add i4 0, 0
@@ -170,14 +165,12 @@ define i4 @main(){
   ret i4 %c
 }
       |};
-  [%expect
-    {| Error: Runtime error: Division by 0! |}]
+  [%expect {| Error: Runtime error: Division by 0! |}]
 ;;
 
-
-
 let%expect_test _ =
-interp_test {|  
+  interp_test
+    {|  
 define float @main(){
   %a = fadd float 0.0, 0.0
   %b = fadd float 2.0, 0.0
@@ -185,14 +178,13 @@ define float @main(){
   ret float %c
 }
       |};
-  [%expect
-    {| (CFloat infinity) |}]
+  [%expect {| (CFloat infinity) |}]
 ;;
 
-
 let%expect_test _ =
-interp_test {|  
-define float @main(){
+  interp_test
+    {|  
+define <4 x i1> @main(){
   %a = xor <4 x i1> <i1 0, i1 0, i1 1, i1 1>, <i1 0, i1 1, i1 0, i1 1>
   ret <4 x i1> %a
 }
@@ -204,6 +196,41 @@ define float @main(){
            (CInteger (1, 0L))]) |}]
 ;;
 
+let%expect_test _ =
+  interp_test
+    {|  
+define float @main(){
+  %a = extractelement <3 x float> < float 1.2,  float -3.4,  float 5.6>, i32 1
+  ret float %a
+}
+      |};
+  [%expect {|
+      (CFloat -3.4) |}]
+;;
 
+let%expect_test _ =
+  interp_test
+    {|  
+define <3 x float> @main(){
+  %a = insertelement <3 x float> < float 1.2,  float -3.4,  float 5.6>,  float 82.0, i32 1
+  ret <3 x float> %a
+}
+      |};
+  [%expect {|
+      (CVector [(CFloat 1.2); (CFloat 82.); (CFloat 5.6)]) |}]
+;;
 
-
+let%expect_test _ =
+  interp_test
+    {|  
+define <2 x float> @main(){
+  %a = shufflevector
+   <3 x float> < float 1.2,  float -3.4,  float 5.6>,
+    <3 x float>  < float 10.0,  float 8.0,  float 7.0>,
+     <2 x i32> <i32 1, i32 5>
+  ret <2 x float> %a
+}
+      |};
+  [%expect {|
+      (CVector [(CFloat -3.4); (CFloat 7.)]) |}]
+;;
