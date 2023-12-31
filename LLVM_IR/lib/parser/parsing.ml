@@ -97,7 +97,7 @@ let parse_function =
   return
     ( annot.tp
     , annot.self
-    , Ast.CFunc ({ parameters = annot.parameters; basic_blocks = bbs } : Ast.func)
+    , Ast.CFunc ({ ftp = annot.tp; parameters = annot.parameters; basic_blocks = bbs } : Ast.func)
     , 1 )
 ;;
 

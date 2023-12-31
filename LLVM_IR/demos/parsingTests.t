@@ -4,7 +4,8 @@ SPDX-License-Identifier: CC0-1.0
   $ ./demoParse.exe < ./attachments/fac.ll
   [((TFunc ((TInteger 32), [(TInteger 32)])), (GlobalVar "fac"),
     (CFunc
-       { parameters = [(LocalVar "0")];
+       { ftp = (TFunc ((TInteger 32), [(TInteger 32)]));
+         parameters = [(LocalVar "0")];
          basic_blocks =
          [((LocalVar "<start>"),
            (CLabel
@@ -81,7 +82,7 @@ SPDX-License-Identifier: CC0-1.0
     ((TInteger 32), (GlobalVar "bb"), (CInteger (32, 32L)), 4);
     ((TFunc ((TInteger 32), [])), (GlobalVar "ds"),
      (CFunc
-        { parameters = [];
+        { ftp = (TFunc ((TInteger 32), [])); parameters = [];
           basic_blocks =
           [((LocalVar "<start>"),
             (CLabel
@@ -125,7 +126,7 @@ SPDX-License-Identifier: CC0-1.0
      1);
     ((TFunc ((TInteger 32), [])), (GlobalVar "main"),
      (CFunc
-        { parameters = [];
+        { ftp = (TFunc ((TInteger 32), [])); parameters = [];
           basic_blocks =
           [((LocalVar "<start>"),
             (CLabel
