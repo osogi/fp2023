@@ -43,8 +43,8 @@ let read_var : Ast.variable -> (state, Ast.const) t =
     | Ast.LocalVar name -> find_var name local
 ;;
 
-let write_var : Ast.variable * Ast.const -> (state, unit) t =
-  fun (key, value) ->
+let write_var : Ast.variable -> Ast.const -> (state, unit) t =
+  fun key value ->
   let* old_local, old_global, old_heap, old_stack = read in
   match key with
   | Ast.GlobalVar name ->

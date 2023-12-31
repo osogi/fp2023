@@ -3,6 +3,11 @@
 (** SPDX-License-Identifier: CC0-1.0 *)
 open State
 
+let align_addr addr align isUp =
+  let res = addr / align * align in
+  if res != addr then if isUp then res + align else res else res
+;;
+
 let put_cnst_in_heap : int -> Ast.const -> (state, unit) t =
   fun addr cnst ->
   let lst = Serialisation.serialise cnst in
@@ -13,6 +18,10 @@ let put_cnst_in_heap : int -> Ast.const -> (state, unit) t =
   write_bytes bts
 ;;
 
+(* let put_cnst_in_heap_align : int -> Ast.const -> int -> (state, unit) t =
+   fun addr cnst align -> put_cnst_in_heap (align_addr addr align true) cnst
+   ;; *)
+
 let take_cnst_in_heap : int -> Ast.tp -> (state, Ast.const) t =
   fun addr tp ->
   let indxs = List.init (Serialisation.raw_date_len tp) (fun x -> addr + x) in
@@ -20,10 +29,10 @@ let take_cnst_in_heap : int -> Ast.tp -> (state, Ast.const) t =
   return (Serialisation.deserialise tp bts)
 ;;
 
-let alloc_stack : int -> (state, int) t =
-  fun len ->
+let alloc_stack_align : int -> int -> (state, int) t =
+  fun len align ->
   let* old_local, old_global, old_heap, old_stack = read in
-  let addr = old_stack - len - 1 in
+  let addr = align_addr (old_stack - len - 1) align false in
   write (old_local, old_global, old_heap, addr) *> return addr
 ;;
 

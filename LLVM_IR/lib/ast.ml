@@ -155,7 +155,8 @@ and instruction =
 and basic_block = instruction list [@@deriving show { with_path = false }]
 
 and func =
-  { parameters : variable list
+  { ftp: tp 
+    ;parameters : variable list
   ; basic_blocks : (variable * const) list
   }
 [@@deriving show { with_path = false }]
