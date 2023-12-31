@@ -234,3 +234,43 @@ define <2 x float> @main(){
   [%expect {|
       (CVector [(CFloat -3.4); (CFloat 7.)]) |}]
 ;;
+
+
+let%expect_test _ =
+  interp_test
+    {|  
+define i32 @main(){
+  %a = extractvalue {[3 x i32], float} {[3 x i32][i32 21, i32 32, i32 43], float 50.0}, 0, 1
+  ret i32 %a
+}
+      |};
+  [%expect {|
+      (CInteger (32, 32L)) |}]
+;;
+
+let%expect_test _ =
+  interp_test
+    {|  
+define i32 @main(){
+  %a = insertvalue {[3 x i32], float} {[3 x i32][i32 21, i32 32, i32 43], float 50.0}, i32 4, 0, 1
+  ret {[3 x i32], float} %a
+}
+      |};
+  [%expect {|
+      (CStruct
+         [(CArr [(CInteger (32, 21L)); (CInteger (32, 4L)); (CInteger (32, 43L))]);
+           (CFloat 50.)]) |}]
+;;
+
+
+let%expect_test _ =
+  interp_test
+    {|  
+define i32 @main(){
+  %a = insertvalue {[3 x i32], float} {[3 x i32][i32 21, i32 32, i32 43], float 50.0}, i32 4, 1
+  ret {[3 x i32], float} %a
+}
+      |};
+  [%expect {|
+      Error: Want to insert value with type (TInteger 32) instead of value with type TFloat! |}]
+;;
