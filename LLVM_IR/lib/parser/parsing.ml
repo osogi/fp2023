@@ -90,28 +90,27 @@ let parse_function_body =
 ;;
 
 let parse_function =
-  whitespaces *> word "define" *> (parse_function_annotation)
+  whitespaces *> word "define" *> parse_function_annotation
   >>= fun annot ->
   parse_function_body
   >>= fun bbs ->
   return
     ( annot.tp
     , annot.self
-    , Ast.CFunc ({ parameters = annot.parameters; basic_blocks = bbs } : Ast.func), 1 )
+    , Ast.CFunc ({ parameters = annot.parameters; basic_blocks = bbs } : Ast.func)
+    , 1 )
 ;;
 
-let parse_glob_var = 
-  let* variable = whitespaces *>  parse_global_variable <* whitespaces <* char '=' in 
-  let* tp = whitespaces *> word "global" *> whitespaces *> parse_main_type in 
+let parse_glob_var =
+  let* variable = whitespaces *> parse_global_variable <* whitespaces <* char '=' in
+  let* tp = whitespaces *> word "global" *> whitespaces *> parse_main_type in
   let* const = whitespaces *> parse_const tp in
   let* alignment = Instructions.parse_align in
   return (tp, variable, const, alignment)
-(*@dd = global i32 0, align 4 *)
-
-let start_parse : Ast.glob_list t = many (choice [ parse_function; parse_glob_var ]) <* whitespaces
-
-let parse_program prog =
-  match Angstrom.parse_string ~consume:Consume.All start_parse prog with
-  | Result.Error e -> Result.Error e
-  | Result.Ok lst -> Result.Ok lst
 ;;
+
+let start_parse : Ast.glob_list t =
+  many (choice [ parse_function; parse_glob_var ]) <* whitespaces
+;;
+
+let parse_program prog = Angstrom.parse_string ~consume:Consume.All start_parse prog
