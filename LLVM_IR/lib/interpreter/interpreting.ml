@@ -190,4 +190,20 @@ define float @main(){
 ;;
 
 
+let%expect_test _ =
+interp_test {|  
+define float @main(){
+  %a = xor <4 x i1> <i1 0, i1 0, i1 1, i1 1>, <i1 0, i1 1, i1 0, i1 1>
+  ret <4 x i1> %a
+}
+      |};
+  [%expect
+    {|
+      (CVector
+         [(CInteger (1, 0L)); (CInteger (1, 1L)); (CInteger (1, 1L));
+           (CInteger (1, 0L))]) |}]
+;;
+
+
+
 
