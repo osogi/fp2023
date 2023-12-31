@@ -91,47 +91,103 @@ let interpritate_ast : Ast.glob_list -> (state, Ast.const) t =
      | _ -> fail "Error: main is not function\n"
 ;;
 
-(* let%test _ =
-  let _ =
-    match
-      Parser.Parsing.parse_program
-        {|  
-      @dd = global i32 0, align 4
-@bb = global i32 32, align 4
+let interp_test str =
+  match Parser.Parsing.parse_program str with
+  | Result.Ok x ->
+    (match run (interpritate_ast x) empty_state with
+     | _, Result.Ok x -> Printf.printf "%s\n" (Ast.show_const x)
+     | _, Result.Error s -> Printf.printf "Error: %s!\n" s)
+  | _ -> Printf.printf "Parser error\n"
+;;
 
-; Function Attrs: noinline nounwind optnone uwtable
-define i32 @ds() {
-  %1 = alloca i32, align 4
-  store i32 5, ptr %1, align 4
-  %2 = load i32, ptr %1, align 4
-  %3 = load i32, ptr @bb, align 4
-  %4 = add nsw i32 %3, %2
-  store i32 %4, ptr @bb, align 4
-  %5 = load i32, ptr @dd, align 4
-  store i32 %5, ptr %1, align 4
-  %6 = load i32, ptr %1, align 4
-  ret i32 %6
-}
 
+
+let%expect_test _ =
+interp_test {|  
 ; Function Attrs: noinline nounwind optnone uwtable
-define i32 @main(){
-  %1 = fneg <3 x float> < float 1.2,  float 3.4,  float 5.6>
+define <3 x float> @main(){
+  %1 = fneg <3 x float> < float 1.2,  float -3.4,  float 5.6>
   br  label %3
   3:
   ret <3 x float> %1
 }
+      |};
+  [%expect
+    {|
+    (CVector [(CFloat -1.2); (CFloat 3.4); (CFloat -5.6)]) |}]
+;;
 
-      |}
-    with
-    | Result.Ok x ->
-      (match run (interpritate_ast x) empty_state with
-       | st, Result.Ok x ->
-         let loc, glob, heap, stack = st in
-         (* Printf.printf "%s\n" (show_map_var glob)) *)
-         (* Printf.printf "%s\n" (show_map_heap heap) *)
-         Printf.printf "%s\n" (Ast.show_const x)
-       | st, Result.Error s -> Printf.printf "Error: %s!\n" s)
-    | _ -> Printf.printf "Parser error\n"
-  in
-  true
-;;  *)
+
+let%expect_test _ =
+interp_test {|  
+; Function Attrs: noinline nounwind optnone uwtable
+define <3 x float> @main(){
+  %1 = fneg <3 x float> < float 1.2,  float -3.4,  float 5.6>
+  %3 = fadd <3 x float> %1, < float 10.0,  float 8.0,  float 7.0>
+  ret <3 x float> %3
+}
+      |};
+  [%expect
+    {|
+    (CVector [(CFloat 8.8); (CFloat 11.4); (CFloat 1.4)]) |}]
+;;
+
+
+
+let%expect_test _ =
+interp_test {|  
+define i4 @main(){
+  %a = add i4 8, 0
+  %b = add i4 2, 0
+  %c = sdiv i4 %a, %b
+  ret i4 %c
+}
+      |};
+  [%expect
+    {| (CInteger (4, 12L)) |}]
+;;
+
+
+let%expect_test _ =
+interp_test {|  
+define i4 @main(){
+  %a = add i4 9, 0
+  %b = add i4 2, 0
+  %c = srem i4 %a, %b
+  ret i4 %c
+}
+      |};
+  [%expect
+    {| (CInteger (4, 15L)) |}]
+;;
+
+let%expect_test _ =
+interp_test {|  
+define i4 @main(){
+  %a = add i4 9, 0
+  %b = add i4 0, 0
+  %c = srem i4 %a, %b
+  ret i4 %c
+}
+      |};
+  [%expect
+    {| Error: Runtime error: Division by 0! |}]
+;;
+
+
+
+let%expect_test _ =
+interp_test {|  
+define float @main(){
+  %a = fadd float 0.0, 0.0
+  %b = fadd float 2.0, 0.0
+  %c = fdiv float %b, %a
+  ret float %c
+}
+      |};
+  [%expect
+    {| (CFloat infinity) |}]
+;;
+
+
+

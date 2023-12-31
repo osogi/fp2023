@@ -9,48 +9,47 @@ type instr_launch_res =
   | Jmp of Ast.basic_block
   | None
 
-let err_type exp cnst =
+let err_type exp get =
   fail
     (Printf.sprintf
        "expected %s, but get %s\n"
        (Ast.show_tp exp)
-       (Ast.show_tp (Ast.const_to_tp cnst)))
+       (Ast.show_tp  get))
 ;;
 
-let is_block  =
-  fun cnst ->
+let err_type_c exp cnst =
+  err_type exp (Ast.const_to_tp cnst)
+;;
+
+let is_block cnst =
   match cnst with
   | Ast.CLabel x -> return x
-  | _ -> err_type Ast.TLabel cnst
+  | _ -> err_type_c Ast.TLabel cnst
 ;;
 
-let is_bool =
-  fun cnst ->
+let is_bool cnst =
   match cnst with
   | Ast.CInteger (1, x) -> return (Int64.equal 1L x)
-  | _ -> err_type (Ast.TInteger 1) cnst
+  | _ -> err_type_c (Ast.TInteger 1) cnst
 ;;
 
-let is_int =
-  fun cnst ->
+let is_int cnst =
   match cnst with
   | Ast.CInteger (_, x) -> return x
-  | _ -> err_type (Ast.TInteger 0) cnst
+  | _ -> err_type_c (Ast.TInteger 0) cnst
 ;;
 
-let is_float =
-  fun cnst ->
+let is_float cnst =
   match cnst with
   | Ast.CFloat x -> return x
-  | _ -> err_type (Ast.TFloat) cnst
+  | _ -> err_type_c Ast.TFloat cnst
 ;;
 
-let is_vector is_elem = 
-fun cnst ->
+let is_vector is_elem cnst =
   match cnst with
   | Ast.CVector x -> map_list is_elem x
-  | _ -> err_type (Ast.TVector (0, Ast.TVoid)) cnst
-
+  | _ -> err_type_c (Ast.TVector (0, Ast.TVoid)) cnst
+;;
 
 let get_const_from_value : Ast.value -> (state, Ast.const) t = function
   | Ast.Const x -> return x
@@ -66,4 +65,27 @@ let get_const_from_value : Ast.value -> (state, Ast.const) t = function
            (Ast.show_variable var)
            (Ast.show_tp real_tp)
            (Ast.show_tp exp_tp))
+;;
+
+let vectorize1 operat is_elem value =
+  let* v = get_const_from_value value >>= is_vector is_elem in
+  return (Ast.CVector (List.map operat v))
+;;
+
+let vectorize2 operat is_elem v1 v2 =
+  let* v1 = get_const_from_value v1 >>= is_vector is_elem in
+  let* v2 = get_const_from_value v2 >>= is_vector is_elem in
+  return (Ast.CVector (List.map2 operat v1 v2))
+;;
+
+let launch_binary_body_operation operat is_elem x y =
+  let* x = get_const_from_value x >>= is_elem in
+  let* y = get_const_from_value y >>= is_elem in
+  try return (operat x y) with Division_by_zero -> fail "Runtime error: Division by 0"
+;;
+
+let launch_binary_body_operation_vectorizated tp operat is_elem x y =
+  match tp with
+  | Ast.TVector (_, elem_tp) -> vectorize2 (operat elem_tp) is_elem x y
+  | _ -> launch_binary_body_operation (operat tp) is_elem x y
 ;;
