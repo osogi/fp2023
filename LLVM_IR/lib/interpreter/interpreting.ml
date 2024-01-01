@@ -48,35 +48,40 @@ let init_state : Ast.glob_list -> (state, unit) t =
   fun glob_lst -> assign_globs glob_lst *> allocate_globs glob_lst
 ;;
 
+let is_fnc_tp = function
+  | Ast.TFunc (f_ret, f_args) -> return (f_ret, f_args)
+  | _ -> fail "Impossible error: function have not function type"
+;;
+
 let check_fnc_tp (fnc : Ast.func) ret_tp args =
   let arg_tps = List.map Ast.const_to_tp args in
-  match fnc.ftp with
-  | Ast.TFunc (f_ret, f_args) ->
-    if not (Ast.tp_equal f_ret ret_tp)
-    then
-      fail
-        (Printf.sprintf
-           "Try get %s from function with %s return"
-           (Ast.show_tp ret_tp)
-           (Ast.show_tp f_ret))
-    else if not (List.equal Ast.tp_equal f_args arg_tps)
-    then fail "Expected other function args"
-    else return ()
-  | _ -> fail "Impossible error: function have not function type"
+  let* bf = is_fnc_tp fnc.ftp in
+  let f_ret, f_args = bf in
+  if not (Ast.tp_equal f_ret ret_tp)
+  then
+    fail
+      (Printf.sprintf
+         "Try get %s from function with %s return"
+         (Ast.show_tp ret_tp)
+         (Ast.show_tp f_ret))
+  else if not (List.equal Ast.tp_equal f_args arg_tps)
+  then fail "Expected other function args"
+  else return ()
 ;;
 
 let rec icall var res_tp fnc_val params =
   let* cfnc = get_const_from_value fnc_val in
   let* args = map_list get_const_from_value params in
   match cfnc with
-  | Ast.CPointer (Ast.PointerGlob x) -> let* cns = read_var x in
+  | Ast.CPointer (Ast.PointerGlob x) ->
+    let* cns = read_var x in
     (match cns with
      | Ast.CFunc fnc ->
        let* _ = check_fnc_tp fnc res_tp args in
        let* res = launch_function fnc args in
        write_var var res
      | c -> fail (Printf.sprintf "Expect function got %s" (Ast.show_const c)))
-    | c-> fail (Printf.sprintf "Expect pointer to function got %s" (Ast.show_const c))
+  | c -> fail (Printf.sprintf "Expect pointer to function got %s" (Ast.show_const c))
 
 and launch_other_operation : Ast.other_operation -> (state, instr_launch_res) t =
   fun instr ->
@@ -120,35 +125,65 @@ and launch_function : Ast.func -> Ast.const list -> (state, Ast.const) t =
   map_list init_var params_cnst
   *> map_list init_var fnc.basic_blocks
   *>
-  
   let fb, _ = List.hd fnc.basic_blocks in
-  let* res = launch_block fb in(
-  match fnc.ftp with
-  | Ast.TFunc (f_ret, _) ->
-    let res_tp = Ast.const_to_tp res in
-    if Ast.tp_equal res_tp f_ret
-    then return res
-    else
-      fail
-        (Printf.sprintf
-           "Function try return %s when excpected %s"
-           (Ast.show_tp res_tp)
-           (Ast.show_tp f_ret))
-  | _ ->
-    fail "Impossible error: function have non function type")
+  let* res = launch_block fb in
+  let* bf = is_fnc_tp fnc.ftp in
+  let f_ret, _ = bf in
+  let res_tp = Ast.const_to_tp res in
+  if Ast.tp_equal res_tp f_ret
+  then return res
+  else
+    fail
+      (Printf.sprintf
+         "Function try return %s when excpected %s"
+         (Ast.show_tp res_tp)
+         (Ast.show_tp f_ret))
     <* Memory.free_stack old_stack
     <* let* _, glb, heap, stack, _ = read in
        write (old_loc, glb, heap, stack, old_block)
 ;;
 
+let init_sys_args int_sz =
+  let argc = Common.IrInts.create (Int64.of_int (Array.length Sys.argv)) int_sz in
+  let lst_of_bytes =
+    Array.to_list
+      (Array.map (fun s -> List.init (String.length s) (String.get s)) Sys.argv)
+  in
+  let f bytes =
+    let bytes = List.append bytes [ Char.chr 0 ] in
+    let len = List.length bytes in
+    let* addr = Memory.alloc_stack_align len 1 in
+    Memory.put_bytes_in_heap addr bytes *> return addr
+  in
+  let* rev_addr_lst = map_list f lst_of_bytes >>| List.rev in
+  let f addr =
+    let* ptr_addr =
+      Memory.alloc_stack_align (Serialisation.raw_date_len Ast.TPointer) 1
+    in
+    Memory.put_cnst_in_heap ptr_addr (to_ptr addr) *> return ptr_addr
+  in
+  let* ptrs_addr = map_list f rev_addr_lst in
+  let fin_addr = List.nth ptrs_addr (List.length ptrs_addr - 1) in
+  let argv = to_ptr fin_addr in
+  return [ argc; argv ]
+;;
+
+let launch_main =
+  let* main = read_var (Ast.GlobalVar "main") in
+  match main with
+  (* TODO: add check for main arguments*)
+  | Ast.CFunc x ->
+    let* bf = is_fnc_tp x.ftp in
+    let _, param = bf in
+    (match param with
+     | [] -> launch_function x []
+     | [ Ast.TInteger sz; Ast.TPointer ] -> init_sys_args sz >>= launch_function x
+     | _ -> fail "Can not run main with unknown signature")
+  | _ -> fail "Error: main is not function\n"
+;;
+
 let interpritate_ast : Ast.glob_list -> (state, Ast.const) t =
-  fun glb_lst ->
-  init_state glb_lst
-  *> let* main = read_var (Ast.GlobalVar "main") in
-     match main with
-     (* TODO: add check for main arguments*)
-     | Ast.CFunc x -> launch_function x []
-     | _ -> fail "Error: main is not function\n"
+  fun glb_lst -> init_state glb_lst *> launch_main
 ;;
 
 let interp_test str =
