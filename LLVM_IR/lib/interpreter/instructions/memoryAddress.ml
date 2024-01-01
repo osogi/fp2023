@@ -9,7 +9,7 @@ let ialloca variable tp value align =
   let* n = get_const_from_value value >>= is_int in
   let sz = Int64.to_int n * Serialisation.raw_date_len tp in
   let* addr = Memory.alloc_stack_align sz align in
-  write_var variable (Ast.CPointer addr)
+  write_var variable (to_ptr addr)
 ;;
 
 let istore _tp value ptr align =
@@ -51,23 +51,24 @@ let rec rec_real_getelementprt tp ptr ilist =
 
 let real_getelemetptr tp ptr ilist =
   match ilist with
-  | [] -> return (Ast.CPointer ptr)
+  | [] -> return (to_ptr ptr)
   | x :: tl ->
     let ptr = ptr + (Serialisation.raw_date_len tp * x) in
     let* fin_ptr = rec_real_getelementprt tp ptr tl in
-    return (Ast.CPointer fin_ptr)
+    return  (to_ptr fin_ptr)
 ;;
 
 let igetelementptr var v_tp ptr_tp ptr ilist =
   match ptr_tp with
-  | Ast.TVector (_, _) -> 
-    let f (_, b) = get_const_from_value b >>= is_vector is_int >>| List.map Int64.to_int  in
+  | Ast.TVector (_, _) ->
+    let f (_, b) =
+      get_const_from_value b >>= is_vector is_int >>| List.map Int64.to_int
+    in
     let* indss = map_list f ilist in
     let* ptrs = get_const_from_value ptr >>= is_vector is_ptr in
-    let cnsts = List.map2 (real_getelemetptr v_tp) ptrs indss in 
-    let* cnst = map_list (fun s -> s >>= return) cnsts >>| fun x -> (Ast.CVector x) in 
+    let cnsts = List.map2 (real_getelemetptr v_tp) ptrs indss in
+    let* cnst = map_list (fun s -> s >>= return) cnsts >>| fun x -> Ast.CVector x in
     write_var var cnst
-
   | _ ->
     let f (_, b) = get_const_from_value b >>= is_int >>| Int64.to_int in
     let* inds = map_list f ilist in

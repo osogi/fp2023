@@ -2,6 +2,8 @@
 
 (** SPDX-License-Identifier: CC0-1.0 *)
 
+open State
+
 let div_up x y =
   let res = x / y in
   if y * res != x then res + 1 else res
@@ -37,23 +39,24 @@ let serialise_flt flt =
   serialise_int 64 iflt
 ;;
 
-let rec serialise_aggregate_tp : Ast.const list -> char list =
-  fun cnsts ->
-  let f acc_lst cnst =
-    let lst2 = serialise cnst in
-    List.concat [ acc_lst; lst2 ]
+let rec serialise_aggregate_tp cnsts =
+  let f cnst =
+    let* lst2 = serialise_with_state cnst in
+    return lst2
   in
-  List.fold_left f [] cnsts
+  let* lsts = map_list f cnsts in
+  return (List.concat lsts)
 
-and serialise : Ast.const -> char list = function
-  | Ast.CVoid -> []
-  | Ast.CInteger (sz, value) -> serialise_int sz value
-  | Ast.CFloat flt -> serialise_flt flt
-  | Ast.CPointer integer -> serialise_int 63 (Int64.of_int integer)
+and serialise_with_state : Ast.const -> (state, char list) t = function
+  | Ast.CVoid -> return []
+  | Ast.CInteger (sz, value) -> return (serialise_int sz value)
+  | Ast.CFloat flt -> return (serialise_flt flt)
+  | Ast.CPointer (Ast.PointerInt integer) ->
+    return (serialise_int 63 (Int64.of_int integer))
   | Ast.CVector cnst | Ast.CArr cnst | Ast.CStruct cnst -> serialise_aggregate_tp cnst
   | Ast.CLabel _ | Ast.CFunc _ ->
-    let _ = Printf.printf "Imposible error: func and label can't be serealized" in
-    []
+    fail "Imposible error: func and label can't be serealized"
+  | Ast.CPointer (Ast.PointerGlob x) -> read_var x >>= serialise_with_state
 ;;
 
 let bytes_to_int lst =
@@ -70,7 +73,7 @@ let deserialise_flt lst =
 
 let deserialise_ptr lst =
   let iflt = Int64.to_int (bytes_to_int lst) in
-  Ast.CPointer iflt
+  Ast.CPointer (Ast.PointerInt iflt)
 ;;
 
 let rec bytes_to_cnst_lst : char list -> Ast.tp list -> Ast.const list =
@@ -121,8 +124,11 @@ and deserialise : Ast.tp -> char list -> Ast.const =
 ;;
 
 let ser_deser target =
-  let bts = serialise target in
-  deserialise (Ast.const_to_tp target) bts
+  let res = run (serialise_with_state target) empty_state in
+  match res with
+  | _, Result.Ok bts -> deserialise (Ast.const_to_tp target) bts
+  | _, Result.Error _ -> CVoid
+  
 ;;
 
 let ser_test target print =
@@ -154,8 +160,8 @@ let%test _ = ser_test (CFloat (-21.00)) false
 let%test _ = ser_test (CFloat 30.0002) false
 let%test _ = ser_test (CFloat 30.000000000000002) false
 let%test _ = ser_test (CFloat 123.45678901234567) false
-let%test _ = ser_test (CPointer 0x11) false
-let%test _ = ser_test (CPointer  0x40000) false
+let%test _ = ser_test (CPointer (PointerInt 0x11)) false
+let%test _ = ser_test (CPointer (PointerInt 0x40000)) false
 
 let ser_parse_test str print =
   match Parser.CommonParser.test_parse_res Parser.Values.parse_type_with_value str with

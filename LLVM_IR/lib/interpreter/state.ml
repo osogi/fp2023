@@ -29,6 +29,10 @@ type map_var = Ast.const MapString.t [@@deriving show { with_path = false }]
 type bytes = (int * char) Seq.t
 type state = map_var * map_var * map_heap * int (*local glob heap stack_pointer*)
 
+let glob_sect = 1024
+let stack_sect = 0xcf000000
+let empty_state : state = MapString.empty, MapString.empty, MapInt.empty, stack_sect
+
 let read_var : Ast.variable -> (state, Ast.const) t =
   let find_var name map =
     let value = MapString.find_opt name map in

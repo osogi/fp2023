@@ -27,13 +27,18 @@ type variable =
   | GlobalVar of string (** \@name *)
 [@@deriving show { with_path = false }]
 
+type pointer_const =
+  | PointerGlob of variable
+  | PointerInt of int
+[@@deriving show { with_path = false }]
+
 type align = int (* just for better reading*) [@@deriving show { with_path = false }]
 
 type const =
   | CVoid
   | CInteger of int * Int64.t (** size and value*)
   | CFloat of float
-  | CPointer of int
+  | CPointer of pointer_const
   | CVector of const list (** <const, const, ...> *)
   | CArr of const list (** [const, const, ...] *)
   | CStruct of const list (** \{const, const, ...\} *)

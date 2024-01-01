@@ -4,12 +4,6 @@
 
 open State
 
-let glob_sect = 1024
-(*  *)
-
-let stack_sect = 0xcf000000
-let empty_state : state = MapString.empty, MapString.empty, MapInt.empty, stack_sect
-
 let assign_globs : Ast.glob_list -> (state, unit) t =
   fun glob_lst ->
   let count_addr addr glob =
@@ -29,7 +23,7 @@ let assign_globs : Ast.glob_list -> (state, unit) t =
     let cnst =
       match tp with
       | Ast.TFunc (_, _) -> value
-      | _ -> Ast.CPointer addr
+      | _ -> Ast.CPointer (Ast.PointerInt addr)
     in
     write_var var cnst
   in
@@ -42,7 +36,7 @@ let allocate_globs : Ast.glob_list -> (state, unit) t =
     fun (_, var, cnst, _) ->
     let* ptr_cnst = read_var var in
     match ptr_cnst with
-    | Ast.CPointer x -> Memory.put_cnst_in_heap x cnst
+    | Ast.CPointer (Ast.PointerInt x) -> Memory.put_cnst_in_heap x cnst
     | _ -> return ()
   in
   map_list alloc_glob glob_lst *> return ()
@@ -320,7 +314,6 @@ define ptr @main(){
       Error: Runtime error: invalid getelementptr indices! |}]
 ;;
 
-
 let%expect_test _ =
   interp_test
     {|  
@@ -332,9 +325,8 @@ define ptr @main(){
 }
       |};
   [%expect {|
-      (CPointer 2032) |}]
+      (CPointer (PointerInt 2032)) |}]
 ;;
-
 
 let%expect_test _ =
   interp_test
@@ -342,10 +334,35 @@ let%expect_test _ =
 @dd = global i32 312312, align 1000
 
 define < 2 x ptr> @main(){
-  %b = getelementptr { i32, [3 x  i32], i32 }, < 2 x ptr> <ptr @dd, ptr @dd>, i32 0
+  %b = getelementptr { i32, [3 x  i32], i32 }, < 2 x ptr> <ptr @dd, ptr @dd>, 
+                <2 x i32> < i32 2, i32 2>, <2 x i32> < i32 2,i32 0>
   ret < 2 x ptr>  %b
 }
       |};
-  [%expect {|
-      (CPointer 2032) |}]
+  [%expect
+    {|
+      (CVector [(CPointer (PointerInt 2056)); (CPointer (PointerInt 2040))]) |}]
 ;;
+
+let%expect_test _ =
+  interp_test
+    {|  
+@dd = global i32 312312, align 1000
+
+define ptr @main(){
+  %a = alloca { [2 x i32], {i32, ptr}, i32 }
+  store  { [2 x i32], {i32, ptr}, i32 }{ [2 x i32][i32 1, i32 2], {i32, ptr}{i32 3, ptr @dd}, i32 4}, ptr %a
+  %b = getelementptr { [2 x i32], {i32, ptr}, i32 }, ptr %a, i32 0, i32 1, i32 1
+  %c = load ptr, ptr %b
+  ret ptr  %c
+}
+      |};
+  [%expect {|
+      (CPointer (PointerInt 2000)) |}]
+;;
+(*
+   %a = alloca {[3 x i32], float}, align 4
+  store {[3 x i32], float} {[3 x i32][i32 21, i32 32, i32 43], float 50.}, ptr %a, align 4
+  %b = load {[3 x i32], float}, ptr %a, align 4
+  ret {[3 x i32], float} %b
+*)

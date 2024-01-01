@@ -49,7 +49,7 @@ SPDX-License-Identifier: CC0-1.0
                         (Const (CInteger (32, 1L))))));
                  (Other
                     (Call ((LocalVar "10"), (TInteger 32),
-                       (FromVariable ((GlobalVar "fac"), TPointer)),
+                       (Const (CPointer (PointerGlob (GlobalVar "fac")))),
                        [(FromVariable ((LocalVar "9"), (TInteger 32)))])));
                  (MemoryAddress
                     (Load ((LocalVar "11"), (TInteger 32),
@@ -97,7 +97,7 @@ SPDX-License-Identifier: CC0-1.0
                        (FromVariable ((LocalVar "1"), TPointer)), 4)));
                  (MemoryAddress
                     (Load ((LocalVar "3"), (TInteger 32),
-                       (FromVariable ((GlobalVar "bb"), TPointer)), 4)));
+                       (Const (CPointer (PointerGlob (GlobalVar "bb")))), 4)));
                  (Binary
                     (Add
                        ((LocalVar "4"), (TInteger 32),
@@ -106,10 +106,10 @@ SPDX-License-Identifier: CC0-1.0
                  (MemoryAddress
                     (Store ((TInteger 32),
                        (FromVariable ((LocalVar "4"), (TInteger 32))),
-                       (FromVariable ((GlobalVar "bb"), TPointer)), 4)));
+                       (Const (CPointer (PointerGlob (GlobalVar "bb")))), 4)));
                  (MemoryAddress
                     (Load ((LocalVar "5"), (TInteger 32),
-                       (FromVariable ((GlobalVar "dd"), TPointer)), 4)));
+                       (Const (CPointer (PointerGlob (GlobalVar "dd")))), 4)));
                  (MemoryAddress
                     (Store ((TInteger 32),
                        (FromVariable ((LocalVar "5"), (TInteger 32))),
@@ -132,10 +132,12 @@ SPDX-License-Identifier: CC0-1.0
             (CLabel
                [(Other
                    (Call ((LocalVar "1"), (TInteger 32),
-                      (FromVariable ((GlobalVar "ds"), TPointer)), [])));
+                      (Const (CPointer (PointerGlob (GlobalVar "ds")))), 
+                      [])));
                  (Other
                     (Call ((LocalVar "2"), (TInteger 32),
-                       (FromVariable ((GlobalVar "ds"), TPointer)), [])));
+                       (Const (CPointer (PointerGlob (GlobalVar "ds")))), 
+                       [])));
                  (Terminator (Ret ((TInteger 32), (Const (CInteger (32, 0L))))))
                  ]))
             ]
