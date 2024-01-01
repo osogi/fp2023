@@ -46,12 +46,13 @@ let init_state : Ast.glob_list -> (state, unit) t =
   fun glob_lst -> assign_globs glob_lst *> allocate_globs glob_lst
 ;;
 
-let rec launch_block : Ast.basic_block -> (state, Ast.const) t =
-  fun bb ->
+let rec launch_block : Ast.variable -> (state, Ast.const) t =
+  fun bb_var ->
+  let* bb = read_var bb_var >>= Instructions.is_block in
   let* instr_res = map_list Instructions.launch_instruction bb in
   let last_instr = List.nth instr_res (List.length instr_res - 1) in
   match last_instr with
-  | Instructions.Jmp x -> launch_block x
+  | Instructions.Jmp x -> write_last_block bb_var *> launch_block x
   | Instructions.Ret x -> return x
   | Instructions.None ->
     fail "Impossible error: last instruction in block should have some result\n"
@@ -59,20 +60,19 @@ let rec launch_block : Ast.basic_block -> (state, Ast.const) t =
 
 let launch_function : Ast.func -> Ast.const list -> (state, Ast.const) t =
   fun fnc params_val ->
-  let* old_loc, old_glb, old_heap, old_stack = read in
-  write (MapString.empty, old_glb, old_heap, old_stack)
+  let* old_loc, old_glb, old_heap, old_stack, old_block = read in
+  write (MapString.empty, old_glb, old_heap, old_stack, last_block_init)
   *>
   let init_var (param, cnst) = write_var param cnst in
   let params_cnst = List.combine fnc.parameters params_val in
   map_list init_var params_cnst
   *> map_list init_var fnc.basic_blocks
   *>
-  let _, fb = List.hd fnc.basic_blocks in
-  let* fb = Instructions.is_block fb in
+  let fb, _ = List.hd fnc.basic_blocks in
   launch_block fb
   <* Memory.free_stack old_stack
-  <* let* _, glb, heap, stack = read in
-     write (old_loc, glb, heap, stack)
+  <* let* _, glb, heap, stack, _ = read in
+     write (old_loc, glb, heap, stack, old_block)
 ;;
 
 let interpritate_ast : Ast.glob_list -> (state, Ast.const) t =
@@ -399,7 +399,6 @@ let%expect_test _ =
 @bb  = global i32 23
 @cc = global i32 42
 
-
 define  <3 x i32>  @main(){
   %a = ptrtoint <3 x ptr> <ptr @dd, ptr @bb, ptr @cc> to <3 x i32> 
   ret  <3 x i32>   %a
@@ -418,7 +417,6 @@ let%expect_test _ =
 @bb  = global i32 23
 @cc = global i32 42
 
-
 define  <3 x i32>  @main(){
   %a = ptrtoint <3 x ptr> <ptr @dd, ptr @bb, ptr @cc> to <2 x i32> 
   ret  <3 x i32>   %a
@@ -431,7 +429,6 @@ define  <3 x i32>  @main(){
 let%expect_test _ =
   interp_test
     {|  
-
 define  float  @main(){
   %a = sitofp i32 -23 to float 
   ret float   %a
@@ -439,4 +436,109 @@ define  float  @main(){
       |};
   [%expect {|
       (CFloat -23.) |}]
+;;
+
+let%expect_test _ =
+  interp_test
+    {|  
+define  <3 x i1>  @main(){
+  %a = icmp eq <3xi32> <i32 1, i32 2, i32 3>, <i32 2, i32 2, i32 5> 
+  ret <3 x i1> %a 
+}
+      |};
+  [%expect
+    {|
+      (CVector [(CInteger (1, 0L)); (CInteger (1, 1L)); (CInteger (1, 0L))]) |}]
+;;
+
+let%expect_test _ =
+  interp_test {|  
+define  i1  @main(){
+  %a = icmp leq i32 23, 25
+  ret i1 %a 
+}
+      |};
+  [%expect {|
+      Error: get unknown icmp predicate! |}]
+;;
+
+let%expect_test _ =
+  interp_test {|  
+define  i1  @main(){
+  %a = icmp ule i32 23, 25
+  ret i1 %a 
+}
+      |};
+  [%expect {|
+      (CInteger (1, 1L)) |}]
+;;
+
+let%expect_test _ =
+  interp_test
+    {|  
+define i32 @main(){
+one:
+  br label %two
+two:
+  br label %three
+three:
+  %e = phi i32 [ 0, %one ], [1, %two]
+  ret i32 %e
+}      |};
+  [%expect {|
+      (CInteger (32, 1L)) |}]
+;;
+
+let%expect_test _ =
+  interp_test
+    {|  
+define i32 @main(){
+one:
+  br label %three
+two:
+  br label %three
+three:
+  %e = phi i32 [ 0, %one ], [1, %two]
+  ret i32 %e
+}      |};
+  [%expect {|
+      (CInteger (32, 0L)) |}]
+;;
+
+let%expect_test _ =
+  interp_test
+    {|  
+define i32 @main(){
+one:
+  br label %two
+two:
+  br label %three
+three:
+  %e = phi i32 [ 0, %one ]
+  ret i32 %e
+}      |};
+  [%expect {|
+      Error: LLVM do crash-crash (clang-17.0.3 )! |}]
+;;
+
+let%expect_test _ =
+  interp_test
+    {|  
+define i32 @main(){
+  %e = select i1 false, i32 17, i32 42     
+  ret i32 %e
+}      |};
+  [%expect {|
+      (CInteger (32, 42L)) |}]
+;;
+
+let%expect_test _ =
+  interp_test
+    {|  
+define <2 x i32> @main(){
+  %e = select <2 x i1><i1 true, i1 false>, <2 x i32> < i32 11, i32 12>, <2 x i32> < i32 21, i32 22>         ; yields i8:17
+  ret <2 x i32> %e
+}      |};
+  [%expect {|
+      (CVector [(CInteger (32, 11L)); (CInteger (32, 22L))]) |}]
 ;;
