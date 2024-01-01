@@ -87,8 +87,8 @@ and parse_const_integer size =
     ; (if size == 1
        then
          choice
-           [ word "true" *> return (Ast.CInteger (size, 1L))
-           ; word "false" *> return (Ast.CInteger (size, 0L))
+           [ word "true" *> return (Common.IrInts.create 1L size)
+           ; word "false" *> return (Common.IrInts.create 0L size)
            ]
        else fail "Parser error: can't parse i1 const")
     ]
