@@ -183,7 +183,7 @@ let rec const_to_tp : const -> tp = function
      | [] -> TArr (List.length lst, TVoid))
   | CStruct lst -> TStruct (List.map const_to_tp lst)
   | CLabel _ -> TLabel
-  | _ -> TVoid
+  | CFunc f -> f.ftp
 ;;
 
 let rec tp_equal : tp -> tp -> bool =
