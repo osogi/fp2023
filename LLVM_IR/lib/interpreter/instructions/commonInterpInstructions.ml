@@ -39,6 +39,12 @@ let is_float cnst =
   | _ -> err_type_c Ast.TFloat cnst
 ;;
 
+let is_ptr cnst =
+  match cnst with
+  | Ast.CPointer x -> return x
+  | _ -> err_type_c Ast.TPointer cnst
+;;
+
 let is_vector is_elem cnst =
   match cnst with
   | Ast.CVector x -> map_list is_elem x
@@ -47,11 +53,13 @@ let is_vector is_elem cnst =
 
 let is_aggregate is_elem cnst =
   match cnst with
-  | Ast.CArr x
-  | Ast.CStruct x -> map_list is_elem x
-  | _ -> fail (Printf.sprintf "Expected aggregate type, but got %s\n" (Ast.show_tp (Ast.const_to_tp cnst)))
+  | Ast.CArr x | Ast.CStruct x -> map_list is_elem x
+  | _ ->
+    fail
+      (Printf.sprintf
+         "Expected aggregate type, but got %s\n"
+         (Ast.show_tp (Ast.const_to_tp cnst)))
 ;;
-
 
 let get_const_from_value : Ast.value -> (state, Ast.const) t = function
   | Ast.Const x -> return x
