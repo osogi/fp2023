@@ -5,8 +5,6 @@ open State
 
 open CommonInterpInstructions
 
-let _tp x y = Ast.CFloat (Float.add x y)
-
 let write_conversion_res operat is_elem s_tp_decon d_tp_decon s_tp s_val d_tp var =
   let* res =
     match s_tp, d_tp with
