@@ -335,6 +335,22 @@ let%expect_test _ =
 
 define < 2 x ptr> @main(){
   %b = getelementptr { i32, [3 x  i32], i32 }, < 2 x ptr> <ptr @dd, ptr @dd>, 
+                <2 x i32> < i32 2, i32 2>
+  ret < 2 x ptr>  %b
+}
+      |};
+  [%expect
+    {|
+      (CVector [(CPointer (PointerInt 2040)); (CPointer (PointerInt 2040))]) |}]
+;;
+
+let%expect_test _ =
+  interp_test
+    {|  
+@dd = global i32 312312, align 1000
+
+define < 2 x ptr> @main(){
+  %b = getelementptr { i32, [3 x  i32], i32 }, < 2 x ptr> <ptr @dd, ptr @dd>, 
                 <2 x i32> < i32 2, i32 2>, <2 x i32> < i32 2,i32 0>
   ret < 2 x ptr>  %b
 }
@@ -343,6 +359,23 @@ define < 2 x ptr> @main(){
     {|
       (CVector [(CPointer (PointerInt 2056)); (CPointer (PointerInt 2040))]) |}]
 ;;
+
+let%expect_test _ =
+  interp_test
+    {|  
+@dd = global i32 312312, align 1000
+
+define < 2 x ptr> @main(){
+  %b = getelementptr { i32, [3 x  i32], i32 }, < 2 x ptr> <ptr @dd, ptr @dd>, 
+                <2 x i32> < i32 2, i32 2>, <1 x i32> < i32 2>
+  ret < 2 x ptr>  %b
+}
+      |};
+  [%expect
+    {|
+      Error: Vectors have different size in getlementptr! |}]
+;;
+
 
 let%expect_test _ =
   interp_test
