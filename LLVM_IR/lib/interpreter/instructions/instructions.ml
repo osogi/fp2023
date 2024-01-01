@@ -12,5 +12,6 @@ let launch_instruction : Ast.instruction -> (state, instr_launch_res) t = functi
   | Ast.BitwiseBinary inst -> Bitwise.launch_bitwise_operation inst
   | Ast.Vector inst -> Vector.launch_vector_instruction inst
   | Ast.Aggregate inst -> Aggregate.launch_aggregate_instruction inst
+  | Ast.MemoryAddress inst -> MemoryAddress.launch_memory_address_operation inst
   | _ -> return None
 ;;

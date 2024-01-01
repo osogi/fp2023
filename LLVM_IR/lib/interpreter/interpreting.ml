@@ -235,7 +235,6 @@ define <2 x float> @main(){
       (CVector [(CFloat -3.4); (CFloat 7.)]) |}]
 ;;
 
-
 let%expect_test _ =
   interp_test
     {|  
@@ -256,12 +255,12 @@ define i32 @main(){
   ret {[3 x i32], float} %a
 }
       |};
-  [%expect {|
+  [%expect
+    {|
       (CStruct
          [(CArr [(CInteger (32, 21L)); (CInteger (32, 4L)); (CInteger (32, 43L))]);
            (CFloat 50.)]) |}]
 ;;
-
 
 let%expect_test _ =
   interp_test
@@ -271,6 +270,82 @@ define i32 @main(){
   ret {[3 x i32], float} %a
 }
       |};
-  [%expect {|
+  [%expect
+    {|
       Error: Want to insert value with type (TInteger 32) instead of value with type TFloat! |}]
+;;
+
+let%expect_test _ =
+  interp_test
+    {|  
+define i32 @main(){
+  %a = alloca {[3 x i32], float}, align 4
+  store {[3 x i32], float} {[3 x i32][i32 21, i32 32, i32 43], float 50.}, ptr %a, align 4
+  %b = load {[3 x i32], float}, ptr %a, align 4
+  ret {[3 x i32], float} %b
+}
+      |};
+  [%expect
+    {|
+      (CStruct
+         [(CArr [(CInteger (32, 21L)); (CInteger (32, 32L)); (CInteger (32, 43L))]);
+           (CFloat 50.)]) |}]
+;;
+
+let%expect_test _ =
+  interp_test
+    {|  
+@dd = global i32 312312, align 4
+
+define i32 @main(){
+  %b = load i32, ptr @dd, align 4
+  ret i32 %b
+}
+      |};
+  [%expect {|
+      (CInteger (32, 312312L)) |}]
+;;
+
+let%expect_test _ =
+  interp_test
+    {|  
+@dd = global i32 312312, align 1000
+
+define ptr @main(){
+  %b = getelementptr { i32, [3 x  i32], i32 }, ptr @dd, i32 1, i32 0, i32 2
+  ret ptr %b
+}
+      |};
+  [%expect {|
+      Error: Runtime error: invalid getelementptr indices! |}]
+;;
+
+
+let%expect_test _ =
+  interp_test
+    {|  
+@dd = global i32 312312, align 1000
+
+define ptr @main(){
+  %b = getelementptr { i32, [3 x  i32], i32 }, ptr @dd, i32 1, i32 1, i32 2
+  ret ptr %b
+}
+      |};
+  [%expect {|
+      (CPointer 2032) |}]
+;;
+
+
+let%expect_test _ =
+  interp_test
+    {|  
+@dd = global i32 312312, align 1000
+
+define < 2 x ptr> @main(){
+  %b = getelementptr { i32, [3 x  i32], i32 }, < 2 x ptr> <ptr @dd, ptr @dd>, i32 0
+  ret < 2 x ptr>  %b
+}
+      |};
+  [%expect {|
+      (CPointer 2032) |}]
 ;;
