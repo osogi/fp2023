@@ -9,11 +9,30 @@ type instr_launch_res =
   | Jmp of Ast.basic_block
   | None
 
+let to_ptr x = (Ast.CPointer (Ast.PointerInt x))
+
 let err_type exp get =
   fail (Printf.sprintf "expected %s, but get %s\n" (Ast.show_tp exp) (Ast.show_tp get))
 ;;
 
 let err_type_c exp cnst = err_type exp (Ast.const_to_tp cnst)
+
+let get_const_from_value : Ast.value -> (state, Ast.const) t = function
+  | Ast.Const x -> return x
+  | Ast.FromVariable (var, exp_tp) ->
+    let* cnst = read_var var in
+    let real_tp = Ast.const_to_tp cnst in
+    if Ast.tp_equal real_tp exp_tp
+    then return cnst
+    else
+      fail
+        (Printf.sprintf
+           "Variable %s is of type %s, but %s was expected"
+           (Ast.show_variable var)
+           (Ast.show_tp real_tp)
+           (Ast.show_tp exp_tp))
+;;
+
 
 let is_block cnst =
   match cnst with
@@ -39,16 +58,17 @@ let is_float cnst =
   | _ -> err_type_c Ast.TFloat cnst
 ;;
 
-let is_ptr cnst =
+let rec is_ptr cnst =
   match cnst with
-  | Ast.CPointer x -> return x
+  | Ast.CPointer Ast.PointerInt x -> return x
+  | Ast.CPointer Ast.PointerGlob x -> read_var x >>= is_ptr
   | _ -> err_type_c Ast.TPointer cnst
 ;;
 
 let is_vector is_elem cnst =
   match cnst with
   | Ast.CVector x -> map_list is_elem x
-  | _ -> err_type_c (Ast.TVector (0, Ast.TVoid)) cnst
+  | c -> err_type_c (Ast.TVector (0, Ast.const_to_tp c)) cnst
 ;;
 
 let is_aggregate is_elem cnst =
@@ -59,22 +79,6 @@ let is_aggregate is_elem cnst =
       (Printf.sprintf
          "Expected aggregate type, but got %s\n"
          (Ast.show_tp (Ast.const_to_tp cnst)))
-;;
-
-let get_const_from_value : Ast.value -> (state, Ast.const) t = function
-  | Ast.Const x -> return x
-  | Ast.FromVariable (var, exp_tp) ->
-    let* cnst = read_var var in
-    let real_tp = Ast.const_to_tp cnst in
-    if Ast.tp_equal real_tp exp_tp
-    then return cnst
-    else
-      fail
-        (Printf.sprintf
-           "Variable %s is of type %s, but %s was expected"
-           (Ast.show_variable var)
-           (Ast.show_tp real_tp)
-           (Ast.show_tp exp_tp))
 ;;
 
 let vectorize1 operat is_elem value =
