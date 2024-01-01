@@ -10,7 +10,12 @@ let align_addr addr align isUp =
 
 let put_cnst_in_heap : int -> Ast.const -> (state, unit) t =
   fun addr cnst ->
-  let lst = Serialisation.serialise cnst in
+  let* cnst =
+    match cnst with
+    | Ast.CPointer (Ast.PointerGlob x) -> read_var x
+    | cns -> return cns
+  in
+  let* lst = Serialisation.serialise_with_state cnst in
   let indxs =
     List.init (Serialisation.raw_date_len (Ast.const_to_tp cnst)) (fun x -> addr + x)
   in

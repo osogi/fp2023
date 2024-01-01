@@ -69,8 +69,9 @@ and parse_const_array size vector_tp =
   else fail "Parser error: constant vector length mismatch"
 
 and parse_const_pointer =
-  (*TODO: at type check step check that glob exist*)
-  word "null" *> return (Ast.CPointer 0)
+  parse_global_variable
+  >>| (fun var -> Ast.CPointer (Ast.PointerGlob var))
+  <|> word "null" *> return (Ast.CPointer (Ast.PointerInt 0))
 
 and parse_const_float =
   parse_word
@@ -96,11 +97,8 @@ and parse_const_integer size =
 let parse_value tp =
   whitespaces
   *> choice
-       [ (match tp with
-          | Ast.TPointer -> parse_global_variable >>| fun var -> Ast.FromVariable (var, tp)
-          | _ -> fail "Global variables always have only pointer type");
-            (parse_local_variable >>| fun var -> Ast.FromVariable (var, tp));
-            parse_const tp >>| fun const -> Ast.Const const
+       [ (parse_local_variable >>| fun var -> Ast.FromVariable (var, tp))
+       ; (parse_const tp >>| fun const -> Ast.Const const)
        ]
 ;;
 
@@ -133,7 +131,7 @@ let%expect_test _ =
     (parse_additional_type <* whitespaces >>= fun f -> parse_value f)
     Ast.show_value
     "ptr @G ";
-  [%expect {| (FromVariable ((GlobalVar "G"), TPointer)) |}]
+  [%expect {| (Const (CPointer (PointerGlob (GlobalVar "G")))) |}]
 ;;
 
 let%expect_test _ =
