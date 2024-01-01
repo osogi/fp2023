@@ -55,20 +55,32 @@ let real_getelemetptr tp ptr ilist =
   | x :: tl ->
     let ptr = ptr + (Serialisation.raw_date_len tp * x) in
     let* fin_ptr = rec_real_getelementprt tp ptr tl in
-    return  (to_ptr fin_ptr)
+    return (to_ptr fin_ptr)
 ;;
 
 let igetelementptr var v_tp ptr_tp ptr ilist =
+  let rec transpose list =
+    match list with
+    | [] -> []
+    | [] :: xss -> transpose xss
+    | (x :: xs) :: xss ->
+      (x :: List.map List.hd xss) :: transpose (xs :: List.map List.tl xss)
+  in
   match ptr_tp with
   | Ast.TVector (_, _) ->
     let f (_, b) =
       get_const_from_value b >>= is_vector is_int >>| List.map Int64.to_int
     in
-    let* indss = map_list f ilist in
     let* ptrs = get_const_from_value ptr >>= is_vector is_ptr in
-    let cnsts = List.map2 (real_getelemetptr v_tp) ptrs indss in
-    let* cnst = map_list (fun s -> s >>= return) cnsts >>| fun x -> Ast.CVector x in
-    write_var var cnst
+    let ptr_len = List.length ptrs in
+    let* vec_ind = map_list f ilist in
+    if not (List.for_all (fun l -> ptr_len == List.length l) vec_ind)
+    then fail "Vectors have different size in getlementptr"
+    else (
+      let indss = transpose vec_ind in
+      let cnsts = List.map2 (real_getelemetptr v_tp) ptrs indss in
+      let* cnst = map_list (fun s -> s >>= return) cnsts >>| fun x -> Ast.CVector x in
+      write_var var cnst)
   | _ ->
     let f (_, b) = get_const_from_value b >>= is_int >>| Int64.to_int in
     let* inds = map_list f ilist in
