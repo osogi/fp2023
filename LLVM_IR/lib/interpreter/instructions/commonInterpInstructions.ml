@@ -109,3 +109,11 @@ let write_binop_res tp real_add is_int v1 v2 var =
   let* res = launch_binary_body_operation_vectorizated tp real_add is_int v1 v2 in
   write_var var res
 ;;
+
+let check_to_int operat tp x y =
+  match tp with
+  | Ast.TInteger sz -> operat sz x y
+  | _ ->
+    let _ = Printf.printf "Impossible error: get wrong type at binary/biwise operation" in
+    Ast.CVoid
+;;
