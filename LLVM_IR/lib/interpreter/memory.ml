@@ -46,7 +46,7 @@ let free_stack : int -> (state, unit) t =
   let* old_local, old_global, old_heap, old_stack, old_block = read in
   let new_heap =
     MapInt.filter
-      (fun cur_addr _ -> cur_addr < new_stack && cur_addr >= old_stack)
+      (fun cur_addr _ -> not( cur_addr < new_stack && cur_addr >= old_stack))
       old_heap
   in
   write (old_local, old_global, new_heap, new_stack, old_block)

@@ -89,3 +89,7 @@ let write_last_block: Ast.variable -> (state, unit) t=
 fun block ->
   let* old_local, old_global, old_heap, old_stack, _ = read in
   write (old_local, old_global, old_heap, old_stack, block)
+
+
+let print_loc_vars : (state, unit) t=  let* old_local, old_global, old_heap, old_stack, block = read in
+let _ = Printf.printf "%s\n\n\n" (show_map_var old_local) in return ()
