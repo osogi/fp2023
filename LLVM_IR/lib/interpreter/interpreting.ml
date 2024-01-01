@@ -3,6 +3,8 @@
 (** SPDX-License-Identifier: CC0-1.0 *)
 
 open State
+open Instructions
+open CommonInterpInstructions
 
 let assign_globs : Ast.glob_list -> (state, unit) t =
   fun glob_lst ->
@@ -46,19 +48,69 @@ let init_state : Ast.glob_list -> (state, unit) t =
   fun glob_lst -> assign_globs glob_lst *> allocate_globs glob_lst
 ;;
 
-let rec launch_block : Ast.variable -> (state, Ast.const) t =
-  fun bb_var ->
-  let* bb = read_var bb_var >>= Instructions.is_block in
-  let* instr_res = map_list Instructions.launch_instruction bb in
-  let last_instr = List.nth instr_res (List.length instr_res - 1) in
-  match last_instr with
-  | Instructions.Jmp x -> write_last_block bb_var *> launch_block x
-  | Instructions.Ret x -> return x
-  | Instructions.None ->
-    fail "Impossible error: last instruction in block should have some result\n"
+let check_fnc_tp (fnc : Ast.func) ret_tp args =
+  let arg_tps = List.map Ast.const_to_tp args in
+  match fnc.ftp with
+  | Ast.TFunc (f_ret, f_args) ->
+    if not (Ast.tp_equal f_ret ret_tp)
+    then
+      fail
+        (Printf.sprintf
+           "Try get %s from function with %s return"
+           (Ast.show_tp ret_tp)
+           (Ast.show_tp f_ret))
+    else if not (List.equal Ast.tp_equal f_args arg_tps)
+    then fail "Expected other function args"
+    else return ()
+  | _ -> fail "Impossible error: function have not function type"
 ;;
 
-let launch_function : Ast.func -> Ast.const list -> (state, Ast.const) t =
+let rec icall var res_tp fnc_val params =
+  let* cfnc = get_const_from_value fnc_val in
+  let* args = map_list get_const_from_value params in
+  match cfnc with
+  | Ast.CPointer (Ast.PointerGlob x) -> let* cns = read_var x in
+    (match cns with
+     | Ast.CFunc fnc ->
+       let* _ = check_fnc_tp fnc res_tp args in
+       let* res = launch_function fnc args in
+       write_var var res
+     | c -> fail (Printf.sprintf "Expect function got %s" (Ast.show_const c)))
+    | c-> fail (Printf.sprintf "Expect pointer to function got %s" (Ast.show_const c))
+
+and launch_other_operation : Ast.other_operation -> (state, instr_launch_res) t =
+  fun instr ->
+  (match instr with
+   | Ast.Icmp (var, com_mode, tp, v1, v2) -> Other.iicmp var com_mode tp v1 v2
+   | Ast.Fcmp (var, com_mode, tp, v1, v2) -> Other.ifcmp var com_mode tp v1 v2
+   | Ast.Phi (var, tp, lst) -> Other.iphi var tp lst
+   | Ast.Select (var, cond_tp, cond, res_tp, v1, v2) ->
+     Other.iselect var cond_tp cond res_tp v1 v2
+   | Ast.Call (var, res_tp, fnc, params) -> icall var res_tp fnc params)
+  *> return None
+
+and launch_instruction : Ast.instruction -> (state, instr_launch_res) t = function
+  | Ast.Terminator inst -> Termainator.launch_terminator_instruction inst
+  | Ast.Unary inst -> Unary.launch_unary_operation inst
+  | Ast.Binary inst -> Binary.launch_binary_operation inst
+  | Ast.BitwiseBinary inst -> Bitwise.launch_bitwise_operation inst
+  | Ast.Vector inst -> Vector.launch_vector_instruction inst
+  | Ast.Aggregate inst -> Aggregate.launch_aggregate_instruction inst
+  | Ast.MemoryAddress inst -> MemoryAddress.launch_memory_address_operation inst
+  | Ast.Conversion inst -> Conversion.launch_conversion_instruction inst
+  | Ast.Other inst -> launch_other_operation inst
+
+and launch_block : Ast.variable -> (state, Ast.const) t =
+  fun bb_var ->
+  let* bb = read_var bb_var >>= is_block in
+  let* instr_res = map_list launch_instruction bb in
+  let last_instr = List.nth instr_res (List.length instr_res - 1) in
+  match last_instr with
+  | Jmp x -> write_last_block bb_var *> launch_block x
+  | Ret x -> return x
+  | None -> fail "Impossible error: last instruction in block should have some result\n"
+
+and launch_function : Ast.func -> Ast.const list -> (state, Ast.const) t =
   fun fnc params_val ->
   let* old_loc, old_glb, old_heap, old_stack, old_block = read in
   write (MapString.empty, old_glb, old_heap, old_stack, last_block_init)
@@ -68,11 +120,25 @@ let launch_function : Ast.func -> Ast.const list -> (state, Ast.const) t =
   map_list init_var params_cnst
   *> map_list init_var fnc.basic_blocks
   *>
+  
   let fb, _ = List.hd fnc.basic_blocks in
-  launch_block fb
-  <* Memory.free_stack old_stack
-  <* let* _, glb, heap, stack, _ = read in
-     write (old_loc, glb, heap, stack, old_block)
+  let* res = launch_block fb in(
+  match fnc.ftp with
+  | Ast.TFunc (f_ret, _) ->
+    let res_tp = Ast.const_to_tp res in
+    if Ast.tp_equal res_tp f_ret
+    then return res
+    else
+      fail
+        (Printf.sprintf
+           "Function try return %s when excpected %s"
+           (Ast.show_tp res_tp)
+           (Ast.show_tp f_ret))
+  | _ ->
+    fail "Impossible error: function have non function type")
+    <* Memory.free_stack old_stack
+    <* let* _, glb, heap, stack, _ = read in
+       write (old_loc, glb, heap, stack, old_block)
 ;;
 
 let interpritate_ast : Ast.glob_list -> (state, Ast.const) t =
@@ -244,7 +310,7 @@ define i32 @main(){
 let%expect_test _ =
   interp_test
     {|  
-define i32 @main(){
+define {[3 x i32], float} @main(){
   %a = insertvalue {[3 x i32], float} {[3 x i32][i32 21, i32 32, i32 43], float 50.0}, i32 4, 0, 1
   ret {[3 x i32], float} %a
 }
@@ -259,7 +325,7 @@ define i32 @main(){
 let%expect_test _ =
   interp_test
     {|  
-define i32 @main(){
+define {[3 x i32], float} @main(){
   %a = insertvalue {[3 x i32], float} {[3 x i32][i32 21, i32 32, i32 43], float 50.0}, i32 4, 1
   ret {[3 x i32], float} %a
 }
@@ -272,7 +338,7 @@ define i32 @main(){
 let%expect_test _ =
   interp_test
     {|  
-define i32 @main(){
+define {[3 x i32], float} @main(){
   %a = alloca {[3 x i32], float}, align 4
   store {[3 x i32], float} {[3 x i32][i32 21, i32 32, i32 43], float 50.}, ptr %a, align 4
   %b = load {[3 x i32], float}, ptr %a, align 4

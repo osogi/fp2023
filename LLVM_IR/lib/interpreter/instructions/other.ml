@@ -134,14 +134,3 @@ let iselect var cond_tp cond res_tp v1 v2 =
   write_var var res
 ;;
 
-let launch_other_operation : Ast.other_operation -> (state, instr_launch_res) t =
-  fun instr ->
-  (match instr with
-   | Ast.Icmp (var, com_mode, tp, v1, v2) -> iicmp var com_mode tp v1 v2
-   | Ast.Fcmp (var, com_mode, tp, v1, v2) -> ifcmp var com_mode tp v1 v2
-   | Ast.Phi (var, tp, lst) -> iphi var tp lst
-   | Ast.Select (var, cond_tp, cond, res_tp, v1, v2) ->
-     iselect var cond_tp cond res_tp v1 v2
-   | _ -> fail "bb")
-  *> return None
-;;
