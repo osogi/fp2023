@@ -6,7 +6,7 @@ open State
 
 type instr_launch_res =
   | Ret of Ast.const
-  | Jmp of Ast.basic_block
+  | Jmp of Ast.variable
   | None
 
 let to_ptr x = (Ast.CPointer (Ast.PointerInt x))
@@ -117,3 +117,7 @@ let check_to_int operat tp x y =
     let _ = Printf.printf "Impossible error: get wrong type at binary/biwise operation" in
     Ast.CVoid
 ;;
+
+let get_bb_var_from_label = function
+| Ast.FromVariable (x, _) -> return x 
+| Ast.Const _ -> fail "expected get basic block" 

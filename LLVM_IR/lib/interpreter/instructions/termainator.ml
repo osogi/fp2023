@@ -15,18 +15,15 @@ let iret _tp value =
 let real_jmp bl = return (Jmp bl)
 
 let ibr label =
-  let* cnst = get_const_from_value label in
-  let* bl = is_block cnst in
+  let* bl = get_bb_var_from_label label in
   real_jmp bl
 ;;
 
 let ibrcond cond label1 label2 =
   let* cond = get_const_from_value cond in
-  let* label1 = get_const_from_value label1 in
-  let* label2 = get_const_from_value label2 in
+  let* label1 = get_bb_var_from_label label1 in
+  let* label2 = get_bb_var_from_label label2 in
   let* cond = is_bool cond in
-  let* label1 = is_block label1 in
-  let* label2 = is_block label2 in
   if cond then real_jmp label1 else real_jmp label2
 ;;
 
@@ -40,13 +37,13 @@ let real_switch sw dc cases =
 let iswitch tp switcher default_case additional_cases =
   match tp with
   | Ast.TInteger _ ->
-    let* df = get_const_from_value default_case >>= is_block in
+    let* df = get_bb_var_from_label default_case in
     let* sw = get_const_from_value switcher >>= is_int in
     let* cases =
       map_list
         (fun (v1, v2) ->
           let* v1 = get_const_from_value v1 >>= is_int in
-          let* v2 = get_const_from_value v2 >>= is_block in
+          let* v2 = get_bb_var_from_label v2 in
           return (v1, v2))
         additional_cases
     in
