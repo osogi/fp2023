@@ -371,11 +371,9 @@ define < 2 x ptr> @main(){
   ret < 2 x ptr>  %b
 }
       |};
-  [%expect
-    {|
+  [%expect {|
       Error: Vectors have different size in getlementptr! |}]
 ;;
-
 
 let%expect_test _ =
   interp_test
@@ -393,9 +391,52 @@ define ptr @main(){
   [%expect {|
       (CPointer (PointerInt 2000)) |}]
 ;;
-(*
-   %a = alloca {[3 x i32], float}, align 4
-  store {[3 x i32], float} {[3 x i32][i32 21, i32 32, i32 43], float 50.}, ptr %a, align 4
-  %b = load {[3 x i32], float}, ptr %a, align 4
-  ret {[3 x i32], float} %b
-*)
+
+let%expect_test _ =
+  interp_test
+    {|  
+@dd = global i32 312312, align 1000
+@bb  = global i32 23
+@cc = global i32 42
+
+
+define  <3 x i32>  @main(){
+  %a = ptrtoint <3 x ptr> <ptr @dd, ptr @bb, ptr @cc> to <3 x i32> 
+  ret  <3 x i32>   %a
+}
+      |};
+  [%expect
+    {|
+      (CVector
+         [(CInteger (32, 2000L)); (CInteger (32, 2004L)); (CInteger (32, 2008L))]) |}]
+;;
+
+let%expect_test _ =
+  interp_test
+    {|  
+@dd = global i32 312312, align 1000
+@bb  = global i32 23
+@cc = global i32 42
+
+
+define  <3 x i32>  @main(){
+  %a = ptrtoint <3 x ptr> <ptr @dd, ptr @bb, ptr @cc> to <2 x i32> 
+  ret  <3 x i32>   %a
+}
+      |};
+  [%expect {|
+      Error: Source vector and destination have different size! |}]
+;;
+
+let%expect_test _ =
+  interp_test
+    {|  
+
+define  float  @main(){
+  %a = sitofp i32 -23 to float 
+  ret float   %a
+}
+      |};
+  [%expect {|
+      (CFloat -23.) |}]
+;;
