@@ -8,6 +8,13 @@ let align_addr addr align isUp =
   if res != addr then if isUp then res + align else res else res
 ;;
 
+let put_bytes_in_heap : int -> char list -> (state, unit) t =
+  fun addr lst ->
+  let indxs = List.init (List.length lst) (fun x -> addr + x) in
+  let bts = List.to_seq (List.combine indxs lst) in
+  write_bytes bts
+;;
+
 let put_cnst_in_heap : int -> Ast.const -> (state, unit) t =
   fun addr cnst ->
   let* cnst =
@@ -16,11 +23,7 @@ let put_cnst_in_heap : int -> Ast.const -> (state, unit) t =
     | cns -> return cns
   in
   let* lst = Serialisation.serialise_with_state cnst in
-  let indxs =
-    List.init (Serialisation.raw_date_len (Ast.const_to_tp cnst)) (fun x -> addr + x)
-  in
-  let bts = List.to_seq (List.combine indxs lst) in
-  write_bytes bts
+  put_bytes_in_heap addr lst
 ;;
 
 (* let put_cnst_in_heap_align : int -> Ast.const -> int -> (state, unit) t =
@@ -46,7 +49,7 @@ let free_stack : int -> (state, unit) t =
   let* old_local, old_global, old_heap, old_stack, old_block = read in
   let new_heap =
     MapInt.filter
-      (fun cur_addr _ -> not( cur_addr < new_stack && cur_addr >= old_stack))
+      (fun cur_addr _ -> not (cur_addr < new_stack && cur_addr >= old_stack))
       old_heap
   in
   write (old_local, old_global, new_heap, new_stack, old_block)
