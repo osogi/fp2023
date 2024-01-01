@@ -199,3 +199,10 @@ let rec tp_equal : tp -> tp -> bool =
   | TStruct tps1, TStruct tps2 -> List.equal tp_equal tps1 tps2
   | _ -> false
 ;;
+
+
+let variable_equal v1 v2 = 
+  match v1, v2 with
+  | GlobalVar n1, GlobalVar n2
+  | LocalVar n1, LocalVar n2 -> String.equal n1 n2 
+  | _, _ -> false

@@ -14,5 +14,5 @@ let launch_instruction : Ast.instruction -> (state, instr_launch_res) t = functi
   | Ast.Aggregate inst -> Aggregate.launch_aggregate_instruction inst
   | Ast.MemoryAddress inst -> MemoryAddress.launch_memory_address_operation inst
   | Ast.Conversion inst -> Conversion.launch_conversion_instruction inst
-  | _ -> return None
+  | Ast.Other inst -> Other.launch_other_operation inst
 ;;

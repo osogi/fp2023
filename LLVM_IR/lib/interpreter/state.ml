@@ -27,11 +27,12 @@ end
 type map_heap = char MapInt.t [@@deriving show { with_path = false }]
 type map_var = Ast.const MapString.t [@@deriving show { with_path = false }]
 type bytes = (int * char) Seq.t
-type state = map_var * map_var * map_heap * int (*local glob heap stack_pointer*)
+type state = map_var * map_var * map_heap * int * Ast.variable (*local glob heap stack_pointer*)
 
 let glob_sect = 1024
 let stack_sect = 0xcf000000
-let empty_state : state = MapString.empty, MapString.empty, MapInt.empty, stack_sect
+let last_block_init =  Ast.LocalVar "<None>"
+let empty_state : state = MapString.empty, MapString.empty, MapInt.empty, stack_sect, last_block_init
 
 let read_var : Ast.variable -> (state, Ast.const) t =
   let find_var name map =
@@ -41,7 +42,7 @@ let read_var : Ast.variable -> (state, Ast.const) t =
     | None -> fail (Printf.sprintf "Runtime error: Variable %s is not initialized" name)
   in
   fun variable ->
-    let* local, glob, _, _ = read in
+    let* local, glob, _, _ , _ = read in
     match variable with
     | Ast.GlobalVar name -> find_var name glob
     | Ast.LocalVar name -> find_var name local
@@ -49,17 +50,17 @@ let read_var : Ast.variable -> (state, Ast.const) t =
 
 let write_var : Ast.variable -> Ast.const -> (state, unit) t =
   fun key value ->
-  let* old_local, old_global, old_heap, old_stack = read in
+  let* old_local, old_global, old_heap, old_stack, old_block = read in
   match key with
   | Ast.GlobalVar name ->
-    write (old_local, MapString.add name value old_global, old_heap, old_stack)
+    write (old_local, MapString.add name value old_global, old_heap, old_stack, old_block)
   | Ast.LocalVar name ->
-    write (MapString.add name value old_local, old_global, old_heap, old_stack)
+    write (MapString.add name value old_local, old_global, old_heap, old_stack, old_block)
 ;;
 
 let read_byte : int -> (state, char) t =
   fun number ->
-  let* _, _, heap, _ = read in
+  let* _, _, heap, _, _ = read in
   let bt = MapInt.find_opt number heap in
   match bt with
   | Some x -> return x
@@ -76,6 +77,15 @@ let read_bytes : int -> int -> (state, char list) t =
 
 let write_bytes : bytes -> (state, unit) t =
   fun bts ->
-  let* old_local, old_global, old_heap, old_stack = read in
-  write (old_local, old_global, MapInt.add_seq bts old_heap, old_stack)
+  let* old_local, old_global, old_heap, old_stack, old_block = read in
+  write (old_local, old_global, MapInt.add_seq bts old_heap, old_stack, old_block)
 ;;
+
+let read_last_block: (state, Ast.variable) t= 
+  let* _, _, _, _, block = read in 
+  return block
+
+let write_last_block: Ast.variable -> (state, unit) t= 
+fun block ->
+  let* old_local, old_global, old_heap, old_stack, _ = read in
+  write (old_local, old_global, old_heap, old_stack, block)

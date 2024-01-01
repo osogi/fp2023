@@ -36,18 +36,18 @@ let take_cnst_in_heap : int -> Ast.tp -> (state, Ast.const) t =
 
 let alloc_stack_align : int -> int -> (state, int) t =
   fun len align ->
-  let* old_local, old_global, old_heap, old_stack = read in
+  let* old_local, old_global, old_heap, old_stack, old_block = read in
   let addr = align_addr (old_stack - len - 1) align false in
-  write (old_local, old_global, old_heap, addr) *> return addr
+  write (old_local, old_global, old_heap, addr, old_block) *> return addr
 ;;
 
 let free_stack : int -> (state, unit) t =
   fun new_stack ->
-  let* old_local, old_global, old_heap, old_stack = read in
+  let* old_local, old_global, old_heap, old_stack, old_block = read in
   let new_heap =
     MapInt.filter
       (fun cur_addr _ -> cur_addr < new_stack && cur_addr >= old_stack)
       old_heap
   in
-  write (old_local, old_global, new_heap, new_stack)
+  write (old_local, old_global, new_heap, new_stack, old_block)
 ;;

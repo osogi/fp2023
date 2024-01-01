@@ -235,7 +235,7 @@ let parse_other_operation =
       (whitespaces *> parse_type_with_value2)
   and ifcmp =
     lift3
-      (fun var cond (tp, v1, v2) -> Ast.Icmp (var, cond, tp, v1, v2))
+      (fun var cond (tp, v1, v2) -> Ast.Fcmp (var, cond, tp, v1, v2))
       parse_instruction_result
       (whitespaces *> word "fcmp" *> whitespaces *> parse_word)
       (whitespaces *> parse_type_with_value2)
@@ -667,7 +667,7 @@ let%expect_test _ =
   [%expect
     {|
     (Other
-       (Icmp ((LocalVar "res"), "one", TFloat, (Const (CFloat 4.)),
+       (Fcmp ((LocalVar "res"), "one", TFloat, (Const (CFloat 4.)),
           (Const (CFloat 5.))))) |}]
 ;;
 
