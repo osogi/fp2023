@@ -83,24 +83,18 @@ SPDX-License-Identifier: CC0-1.0
           [((LocalVar "<start>"),
             (CLabel
                [(MemoryAddress
-                   (Alloca ((LocalVar "3"), (TInteger 32),
+                   (Alloca ((LocalVar "1"), (TInteger 32),
                       (Const (CInteger (1, 1L))), 4)));
                  (MemoryAddress
-                    (Alloca ((LocalVar "4"), (TInteger 32),
-                       (Const (CInteger (1, 1L))), 4)));
-                 (MemoryAddress
-                    (Alloca ((LocalVar "5"), TPointer,
-                       (Const (CInteger (1, 1L))), 8)));
-                 (MemoryAddress
                     (Store ((TInteger 32), (Const (CInteger (32, 0L))),
-                       (FromVariable ((LocalVar "3"), TPointer)), 4)));
+                       (FromVariable ((LocalVar "1"), TPointer)), 4)));
                  (Other
-                    (Call ((LocalVar "6"), (TInteger 32),
+                    (Call ((LocalVar "2"), (TInteger 32),
                        (Const (CPointer (PointerGlob (GlobalVar "fac")))),
-                       [(Const (CInteger (32, 10L)))])));
+                       [(Const (CInteger (32, 5L)))])));
                  (Terminator
                     (Ret ((TInteger 32),
-                       (FromVariable ((LocalVar "6"), (TInteger 32))))))
+                       (FromVariable ((LocalVar "2"), (TInteger 32))))))
                  ]))
             ]
           }),

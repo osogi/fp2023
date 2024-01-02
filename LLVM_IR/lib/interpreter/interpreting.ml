@@ -107,6 +107,7 @@ and launch_instruction : Ast.instruction -> (state, instr_launch_res) t = functi
 
 and launch_block : Ast.variable -> (state, Ast.const) t =
   fun bb_var ->
+(* let _ = Printf.printf "%s\n" (Ast.show_variable bb_var) in *)
   let* bb = read_var bb_var >>= is_block in
   let* instr_res = map_list launch_instruction bb in
   let last_instr = List.nth instr_res (List.length instr_res - 1) in
@@ -130,17 +131,17 @@ and launch_function : Ast.func -> Ast.const list -> (state, Ast.const) t =
   let* bf = is_fnc_tp fnc.ftp in
   let f_ret, _ = bf in
   let res_tp = Ast.const_to_tp res in
-  if Ast.tp_equal res_tp f_ret
-  then return res
-  else
-    fail
-      (Printf.sprintf
-         "Function try return %s when excpected %s"
-         (Ast.show_tp res_tp)
-         (Ast.show_tp f_ret))
-    <* Memory.free_stack old_stack
-    <* let* _, glb, heap, stack, _ = read in
-       write (old_loc, glb, heap, stack, old_block)
+  (if Ast.tp_equal res_tp f_ret
+   then return res
+   else
+     fail
+       (Printf.sprintf
+          "Function try return %s when excpected %s"
+          (Ast.show_tp res_tp)
+          (Ast.show_tp f_ret)))
+  <* Memory.free_stack old_stack
+  <* let* _, glb, heap, stack, _ = read in
+     write (old_loc, glb, heap, stack, old_block)
 ;;
 
 let init_sys_args int_sz =
@@ -182,14 +183,16 @@ let launch_main =
   | _ -> fail "Error: main is not function\n"
 ;;
 
-let interpritate_ast : Ast.glob_list -> (state, Ast.const) t =
+let interpretate_ast : Ast.glob_list -> (state, Ast.const) t =
   fun glb_lst -> init_state glb_lst *> launch_main
 ;;
+
+let run_interpretate_on_ast ast = run (interpretate_ast ast) empty_state
 
 let interp_test str =
   match Parser.Parsing.parse_program str with
   | Result.Ok x ->
-    (match run (interpritate_ast x) empty_state with
+    (match run_interpretate_on_ast x with
      | _, Result.Ok x -> Printf.printf "%s\n" (Ast.show_const x)
      | _, Result.Error s -> Printf.printf "Error: %s!\n" s)
   | _ -> Printf.printf "Parser error\n"
@@ -643,3 +646,24 @@ define <2 x i32> @main(){
   [%expect {|
       (CVector [(CInteger (32, 11L)); (CInteger (32, 22L))]) |}]
 ;;
+
+let%expect_test _ =
+  interp_test
+    {|  
+define i32 @main(){
+  br label %c9
+c9:
+  %c11 = add i32 0, 1
+  br label %c14
+c12:
+  %c12 = add i32 0, 4
+  br label %c14
+c14:
+  %c15 = phi i32 [ %c11, %c9 ], [ %c13, %c12 ]
+  ret i32 %c15
+
+}      |};
+  [%expect {|
+      (CInteger (32, 1L)) |}]
+;;
+

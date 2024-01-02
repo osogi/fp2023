@@ -4,6 +4,22 @@
  (public_name demoParse)
  (libraries parser stdio))
 
+(executable
+ (name demoInterpret)
+ (modules demoInterpret)
+ (public_name demoInterpret)
+ (libraries main stdio))
+
 (cram
  (applies_to parsingTests)
  (deps ./demoParse.exe ./attachments/fac.ll ./attachments/test.ll))
+
+(cram
+ (applies_to interpretTests)
+ (deps
+  ./demoInterpret.exe
+  ./attachments/simple_ssa_fail.ll
+  ./attachments/fac.ll
+  ./attachments/sum_args.ll
+  ./attachments/triangle_square.ll
+  ./attachments/fac_arg.ll))
