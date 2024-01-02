@@ -2,7 +2,7 @@
 
 (library
  (name interpreter)
- (public_name LLVM_IR.interpreter)
+ (public_name LLVM_IR.Interpreter)
  (libraries ast common parser base ppx_show.runtime)
  (inline_tests)
  (preprocess

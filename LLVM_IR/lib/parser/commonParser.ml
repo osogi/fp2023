@@ -48,7 +48,7 @@ let str_extended_integer =
 let varname_char = function
   | 'a' .. 'z' -> true
   | 'A' .. 'Z' -> true
-  | '.' | '$' | '_' | '-' -> true
+  | '.' | '$' | '_' | '-' | '+' -> true
   | _ -> false
 ;;
 
