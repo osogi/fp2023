@@ -25,17 +25,17 @@ let ( >>| ) l r = l >>= fun x -> return (r x)
 let ( <* ) l r = l >>= fun h -> r >>= fun _ -> return h
 
 (* let wrap_list : ('s, 'a) t list -> ('s, 'a list) t =
-  fun mlst st ->
-  let f lst res =
-    match lst, res st with
-    | Result.Ok lst, (_, Result.Ok x) -> Result.ok (x :: lst)
-    | _, (_, Result.Error s) -> Result.error s
-    | Result.Error s, _ -> Result.error s
-  in
-  st, List.fold_left f (Result.ok []) mlst
-;; *)
+   fun mlst st ->
+   let f lst res =
+   match lst, res st with
+   | Result.Ok lst, (_, Result.Ok x) -> Result.ok (x :: lst)
+   | _, (_, Result.Error s) -> Result.error s
+   | Result.Error s, _ -> Result.error s
+   in
+   st, List.fold_left f (Result.ok []) mlst
+   ;; *)
 
-let map_list : 'a 'b 's. ('a -> ('st, 'b) t) -> 'a list -> ('st, 'b list) t  =
+let map_list : 'a 'b 's. ('a -> ('st, 'b) t) -> 'a list -> ('st, 'b list) t =
   fun custom_f mlst ->
   let f lst res =
     let* tl = lst in
@@ -46,7 +46,7 @@ let map_list : 'a 'b 's. ('a -> ('st, 'b) t) -> 'a list -> ('st, 'b list) t  =
 ;;
 
 (* let map_list2 : 'a 'b 's. ('a -> 'b) -> 'a list -> ('s, 'b list) t =
-  fun custom_f mlst ->
-  let f lst res = lst >>= fun tl -> return (custom_f res :: tl) in
-  List.fold_left f (return []) mlst
-;; *)
+   fun custom_f mlst ->
+   let f lst res = lst >>= fun tl -> return (custom_f res :: tl) in
+   List.fold_left f (return []) mlst
+   ;; *)

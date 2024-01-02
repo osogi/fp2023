@@ -47,7 +47,7 @@ let real_shuffle bvec ivec var =
   write_var var (Ast.CVector new_vec)
 ;;
 
-let ishufflevector var _vec_tp vec1 vec2 m vec3 =
+let ishufflevector var _vec_tp vec1 vec2 _m vec3 =
   let* vec1 = get_const_from_value vec1 >>= is_vector return in
   let* vec2 = get_const_from_value vec2 >>= is_vector return in
   let* vec3 = is_vector is_int vec3 in

@@ -103,9 +103,9 @@ and vector_instruction =
 
 and aggregate_instruction =
   | Extractvalue of variable * tp * value * int list
-  (** <result> = extractvalue <aggregate type> <val>, <idx>{, <idx>}* *)
+  (** <result> = extractvalue <aggregate type> <val>, <idx>\{, <idx>\}* *)
   | Insertvalue of variable * tp * value * tp * value * int list
-  (** <result> = insertvalue <aggregate type> <val>, <ty> <elt>, <idx>{, <idx>}* *)
+  (** <result> = insertvalue <aggregate type> <val>, <ty> <elt>, <idx>\{, <idx>\}* *)
 
 and memory_address_instruction =
   | Alloca of variable * tp * value * align
@@ -115,7 +115,7 @@ and memory_address_instruction =
   | Load of variable * tp * value * align
   (** <result> = load <ty>, ptr <pointer>[, align <alignment>]*)
   | Getelementptr of variable * tp * tp * value * (tp * value) list
-  (** <result> = getelementptr <ty>, <ptr_or_ptr_vector> <ptrval>{, <ty> <idx>}* *)
+  (** <result> = getelementptr <ty>, <ptr_or_ptr_vector> <ptrval>\{, <ty> <idx>\}* *)
 
 (** <result> = <conv_inst> <ty> <value> to <ty2> *)
 and conversion_instruction_body = variable * tp * value * tp
@@ -200,9 +200,8 @@ let rec tp_equal : tp -> tp -> bool =
   | _ -> false
 ;;
 
-
-let variable_equal v1 v2 = 
+let variable_equal v1 v2 =
   match v1, v2 with
-  | GlobalVar n1, GlobalVar n2
-  | LocalVar n1, LocalVar n2 -> String.equal n1 n2 
+  | GlobalVar n1, GlobalVar n2 | LocalVar n1, LocalVar n2 -> String.equal n1 n2
   | _, _ -> false
+;;
