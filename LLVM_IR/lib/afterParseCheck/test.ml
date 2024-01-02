@@ -22,16 +22,17 @@ let%expect_test _ =
 
 let%expect_test _ =
   test_ssa
-    "@dd = global i32 0, align 4\n\
-     @bb = global i32 32, align 4\n\
-     @cc = global i32 32, align 4\n\
-     @aa = global i32 32, align 4";
+    {| @dd = global i32 0, align 4
+     @bb = global i32 32, align 4
+     @cc = global i32 32, align 4
+     @aa = global i32 32, align 4 |};
   [%expect {|
     Pass |}]
 ;;
 
 let%expect_test _ =
-  test_ssa "@bb = global i32 0, align 4\n@bb = global i32 32, align 4\n";
+  test_ssa {| @bb = global i32 0, align 4
+  @bb = global i32 32, align 4 |};
   [%expect {|
     SSA check failed:
      Variable bb already was assignmented |}]
@@ -39,12 +40,12 @@ let%expect_test _ =
 
 let%expect_test _ =
   test_ssa
-    "@bb = global i32 0, align 4\n\
-     define i32 @bb(){\n\
-    \  %1 = call i32 @ds()\n\
-    \  %2 = call i32 @ds()\n\
-    \  ret i32 0\n\
-     }";
+    {| @bb = global i32 0, align 4
+    define i32 @bb(){
+      %1 = call i32 @ds()
+      %2 = call i32 @ds()
+      ret i32 0
+     } |};
   [%expect {|
     SSA check failed:
      Variable bb already was assignmented |}]
@@ -66,36 +67,36 @@ let%expect_test _ =
 
 let%expect_test _ =
   test_ssa
-    "define i32 @ds() {\n\
-    \      %1 = alloca i32, align 4\n\
-    \      store i32 5, ptr %1, align 4\n\
-    \      %2 = load i32, ptr %1, align 4\n\
-    \      %3 = load i32, ptr @bb, align 4\n\
-    \      %4 = add nsw i32 %3, %2\n\
-    \      store i32 %4, ptr @bb, align 4\n\
-    \      %5 = load i32, ptr @dd, align 4\n\
-    \      store i32 %5, ptr %1, align 4\n\
-    \      %6 = load i32, ptr %1, align 4\n\
-    \      ret i32 %6\n\
-    \    }";
+    {| define i32 @ds() {
+          %1 = alloca i32, align 4
+          store i32 5, ptr %1, align 4
+          %2 = load i32, ptr %1, align 4
+          %3 = load i32, ptr @bb, align 4
+          %4 = add nsw i32 %3, %2
+          store i32 %4, ptr @bb, align 4
+          %5 = load i32, ptr @dd, align 4
+          store i32 %5, ptr %1, align 4
+          %6 = load i32, ptr %1, align 4
+          ret i32 %6
+        } |};
   [%expect {|
     Pass |}]
 ;;
 
 let%expect_test _ =
   test_ssa
-    "define i32 @ds(i32 %6) {\n\
-    \      %1 = alloca i32, align 4\n\
-    \      store i32 5, ptr %1, align 4\n\
-    \      %2 = load i32, ptr %1, align 4\n\
-    \      %3 = load i32, ptr @bb, align 4\n\
-    \      %4 = add nsw i32 %3, %2\n\
-    \      store i32 %4, ptr @bb, align 4\n\
-    \      %5 = load i32, ptr @dd, align 4\n\
-    \      store i32 %5, ptr %1, align 4\n\
-    \      %6 = load i32, ptr %1, align 4\n\
-    \      ret i32 %6\n\
-    \    }";
+    {| define i32 @ds(i32 %6) {
+          %1 = alloca i32, align 4
+          store i32 5, ptr %1, align 4
+          %2 = load i32, ptr %1, align 4
+          %3 = load i32, ptr @bb, align 4
+          %4 = add nsw i32 %3, %2
+          store i32 %4, ptr @bb, align 4
+          %5 = load i32, ptr @dd, align 4
+          store i32 %5, ptr %1, align 4
+          %6 = load i32, ptr %1, align 4
+          ret i32 %6
+        } |};
   [%expect {|
     SSA check failed:
      Variable 6 already was assignmented |}]
@@ -103,15 +104,15 @@ let%expect_test _ =
 
 let%expect_test _ =
   test_ssa
-    "define i32 @d1(i32 %0) {\n\
-    \      %1 = alloca i32, align 4\n\
-    \      ret i32 %6\n\
-    \    }\n\
-    \    \n\
-    \    define i32 @d2(i32 %0) {\n\
-    \      %1 = alloca i32, align 4\n\
-    \      ret i32 %6\n\
-    \    }";
+    {| define i32 @d1(i32 %0) {
+          %1 = alloca i32, align 4
+          ret i32 %6
+        }
+        
+        define i32 @d2(i32 %0) {
+          %1 = alloca i32, align 4
+          ret i32 %6
+        } |};
   [%expect {|
     Pass |}]
 ;;

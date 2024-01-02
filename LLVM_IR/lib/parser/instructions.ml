@@ -447,8 +447,8 @@ let%expect_test _ =
   test_parse
     parse_instruction
     Ast.show_instruction
-    "%result = shufflevector <4 x i32> %v1, <4 x i32> %v2,\n\
-    \    <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7 > ";
+    {| %result = shufflevector <4 x i32> %v1, <4 x i32> %v2,
+        <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7 > |};
   [%expect
     {|
       (Vector
@@ -570,11 +570,11 @@ let%expect_test _ =
   test_parse
     parse_instruction
     Ast.show_instruction
-    "%vptr = getelementptr  i32, <4 x ptr> %vs, <4 x i64> %vind1,\n\
-    \    <4 x i32> <i32 2, i32 2, i32 2, i32 2>,\n\
-    \    <4 x i32> <i32 1, i32 1, i32 1, i32 1>,\n\
-    \    <4 x i32> %vind4,\n\
-    \    <4 x i64> <i64 13, i64 13, i64 13, i64 13>";
+    {| %vptr = getelementptr  i32, <4 x ptr> %vs, <4 x i64> %vind1,
+        <4 x i32> <i32 2, i32 2, i32 2, i32 2>,
+        <4 x i32> <i32 1, i32 1, i32 1, i32 1>,
+        <4 x i32> %vind4,
+        <4 x i64> <i64 13, i64 13, i64 13, i64 13> |};
   [%expect
     {|
     (MemoryAddress
