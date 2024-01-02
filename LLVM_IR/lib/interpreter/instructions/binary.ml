@@ -1,7 +1,7 @@
 (** Copyright 2023-2024, Efremov Alexey *)
 
 (** SPDX-License-Identifier: CC0-1.0 *)
-open State
+open Ihelp.State
 
 open CommonInterpInstructions
 
@@ -42,11 +42,14 @@ let launch_binary_operation : Ast.binary_operation -> (state, instr_launch_res) 
      write_binop_res tp (check_to_int real_mul) is_int v1 v2 var
    | Ast.Sub (var, tp, v1, v2) ->
      write_binop_res tp (check_to_int real_sub) is_int v1 v2 var
-   | Ast.Sdiv (var, tp, v1, v2) -> write_binop_res tp (check_div real_sdiv) is_int v1 v2 var
-   | Ast.Srem (var, tp, v1, v2) -> write_binop_res tp (check_div real_srem) is_int v1 v2 var
+   | Ast.Sdiv (var, tp, v1, v2) ->
+     write_binop_res tp (check_div real_sdiv) is_int v1 v2 var
+   | Ast.Srem (var, tp, v1, v2) ->
+     write_binop_res tp (check_div real_srem) is_int v1 v2 var
    | Ast.Udiv (var, tp, v1, v2) ->
      write_binop_res tp (check_to_int real_udiv) is_int v1 v2 var
-   | Ast.Urem (var, tp, v1, v2) -> write_binop_res tp (check_div real_urem) is_int v1 v2 var
+   | Ast.Urem (var, tp, v1, v2) ->
+     write_binop_res tp (check_div real_urem) is_int v1 v2 var
    | Ast.Fadd (var, tp, v1, v2) -> write_binop_res tp real_fadd is_float v1 v2 var
    | Ast.Fmul (var, tp, v1, v2) -> write_binop_res tp real_fmul is_float v1 v2 var
    | Ast.Fdiv (var, tp, v1, v2) -> write_binop_res tp real_fdiv is_float v1 v2 var
