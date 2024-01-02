@@ -40,7 +40,7 @@ let take_cnst_in_heap : int -> Ast.tp -> (state, Ast.const) t =
 let alloc_stack_align : int -> int -> (state, int) t =
   fun len align ->
   let* old_local, old_global, old_heap, old_stack, old_block = read in
-  let addr = align_addr (old_stack - len - 1) align false in
+  let addr = align_addr (old_stack - len) align false in
   write (old_local, old_global, old_heap, addr, old_block) *> return addr
 ;;
 

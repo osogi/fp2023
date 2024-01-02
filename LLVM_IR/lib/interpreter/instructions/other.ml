@@ -99,7 +99,6 @@ let ifcmp var com_mode tp v1 v2 =
 
 let iphi var _tp lst =
   let f (v1, v2) =
-    let* v1 = get_const_from_value v1 in
     let* v2 = get_bb_var_from_label v2 in
     return (v1, v2)
   in
@@ -107,7 +106,7 @@ let iphi var _tp lst =
   let* last_block = read_last_block in
   let res = List.find_opt (fun (_, label) -> Ast.variable_equal label last_block) lst in
   match res with
-  | Some (v, _) -> write_var var v
+  | Some (v, _) -> get_const_from_value v >>= write_var var 
   | None -> fail "LLVM do crash-crash (clang-17.0.3 )"
 ;;
 

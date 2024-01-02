@@ -15,14 +15,14 @@ let ialloca variable tp value align =
 let istore _tp value ptr align =
   let* value = get_const_from_value value in
   let* ptr = get_const_from_value ptr >>= is_ptr in
-  if ptr mod align == 0
+  if true (* ptr mod align == 0 *)
   then Memory.put_cnst_in_heap ptr value
   else fail "Runtime error: get unaligned pointer for store"
 ;;
 
 let iload var tp ptr align =
   let* ptr = get_const_from_value ptr >>= is_ptr in
-  if ptr mod align == 0
+  if true (* ptr mod align == 0 *)
   then
     let* cnst = Memory.take_cnst_in_heap ptr tp in
     write_var var cnst

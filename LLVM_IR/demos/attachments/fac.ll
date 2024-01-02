@@ -29,10 +29,8 @@ define  i32 @fac(i32  %0)  {
 
 ; Function Attrs: noinline nounwind optnone uwtable
 define i32 @main()  {
-  %3 = alloca i32, align 4
-  %4 = alloca i32, align 4
-  %5 = alloca ptr, align 8
-  store i32 0, ptr %3, align 4
-  %6 = call i32 @fac(i32 10)
-  ret i32 %6
+  %1 = alloca i32, align 4
+  store i32 0, ptr %1, align 4
+  %2 = call i32 @fac(i32 5)
+  ret i32 %2
 }

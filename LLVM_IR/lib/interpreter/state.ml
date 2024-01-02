@@ -19,7 +19,7 @@ module MapInt = struct
 
   let pp pp_v ppf m =
     Format.fprintf ppf "@[[@[";
-    iter (fun k v -> Format.fprintf ppf "@[\"%d\": %a@],@\n" k pp_v v) m;
+    iter (fun k v -> Format.fprintf ppf "@[\"%x\": %a@],@\n" k pp_v v) m;
     Format.fprintf ppf "@]]@]"
   ;;
 end
@@ -27,7 +27,7 @@ end
 type map_heap = char MapInt.t [@@deriving show { with_path = false }]
 type map_var = Ast.const MapString.t [@@deriving show { with_path = false }]
 type bytes = (int * char) Seq.t
-type state = map_var * map_var * map_heap * int * Ast.variable (*local glob heap stack_pointer*)
+type state = map_var * map_var * map_heap * int * Ast.variable (*local glob heap stack_pointer*)[@@deriving show { with_path = false }]
 
 let glob_sect = 1024
 let stack_sect = 0xcf000000
