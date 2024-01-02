@@ -1,7 +1,7 @@
 (** Copyright 2023-2024, Efremov Alexey *)
 
 (** SPDX-License-Identifier: CC0-1.0 *)
-
+open Ihelp
 open State
 open Instructions
 open CommonInterpInstructions
@@ -95,7 +95,7 @@ and launch_other_operation : Ast.other_operation -> (state, instr_launch_res) t 
   *> return None
 
 and launch_instruction : Ast.instruction -> (state, instr_launch_res) t = function
-  | Ast.Terminator inst -> Termainator.launch_terminator_instruction inst
+  | Ast.Terminator inst -> Terminator.launch_terminator_instruction inst
   | Ast.Unary inst -> Unary.launch_unary_operation inst
   | Ast.Binary inst -> Binary.launch_binary_operation inst
   | Ast.BitwiseBinary inst -> Bitwise.launch_bitwise_operation inst
