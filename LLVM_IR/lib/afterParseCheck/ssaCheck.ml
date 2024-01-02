@@ -131,13 +131,12 @@ let ssa_block_var : Ast.variable * Ast.const -> (state, unit) t =
 let ssa_fnc : Ast.func -> (state, unit) t =
   fun fnc ->
   let* old_st = read in
-  match old_st with
-  | _old_loc, old_glob ->
-    let new_st = MapString.empty, old_glob in
-    let* _ = write new_st in
-    let* _check_args = map_list try_add_var fnc.parameters in
-    let* _check_blocks = map_list ssa_block_var fnc.basic_blocks in
-    write old_st *> return ()
+  let _old_loc, old_glob = old_st in
+  let new_st = MapString.empty, old_glob in
+  let* _ = write new_st in
+  let* _check_args = map_list try_add_var fnc.parameters in
+  let* _check_blocks = map_list ssa_block_var fnc.basic_blocks in
+  write old_st *> return ()
 ;;
 
 let ssa_glob_list : Ast.glob_list -> (state, unit) t =
