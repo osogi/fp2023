@@ -4,11 +4,8 @@
 
 open Angstrom
 
+let test_parse_res p str = Angstrom.parse_string ~consume:Consume.Prefix p str
 
-
-let test_parse_res p str =
-  Angstrom.parse_string ~consume:Consume.Prefix p str
-;;
 let test_parse p show str =
   match test_parse_res p str with
   | Result.Error _ -> Format.printf "Error"

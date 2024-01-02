@@ -9,7 +9,7 @@ type instr_launch_res =
   | Jmp of Ast.variable
   | None
 
-let to_ptr x = (Ast.CPointer (Ast.PointerInt x))
+let to_ptr x = Ast.CPointer (Ast.PointerInt x)
 
 let err_type exp get =
   fail (Printf.sprintf "expected %s, but get %s\n" (Ast.show_tp exp) (Ast.show_tp get))
@@ -32,7 +32,6 @@ let get_const_from_value : Ast.value -> (state, Ast.const) t = function
            (Ast.show_tp real_tp)
            (Ast.show_tp exp_tp))
 ;;
-
 
 let is_block cnst =
   match cnst with
@@ -60,8 +59,8 @@ let is_float cnst =
 
 let rec is_ptr cnst =
   match cnst with
-  | Ast.CPointer Ast.PointerInt x -> return x
-  | Ast.CPointer Ast.PointerGlob x -> read_var x >>= is_ptr
+  | Ast.CPointer (Ast.PointerInt x) -> return x
+  | Ast.CPointer (Ast.PointerGlob x) -> read_var x >>= is_ptr
   | _ -> err_type_c Ast.TPointer cnst
 ;;
 
@@ -119,5 +118,6 @@ let check_to_int operat tp x y =
 ;;
 
 let get_bb_var_from_label = function
-| Ast.FromVariable (x, _) -> return x 
-| Ast.Const _ -> fail "expected get basic block" 
+  | Ast.FromVariable (x, _) -> return x
+  | Ast.Const _ -> fail "expected get basic block"
+;;

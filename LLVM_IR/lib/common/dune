@@ -2,9 +2,7 @@
  (name common)
  (public_name LLVM_IR.Common)
  (libraries ast)
- (modules stateMonad irInts)
-)
-
+ (modules stateMonad irInts))
 
 ; (library
 ;  (name tests)

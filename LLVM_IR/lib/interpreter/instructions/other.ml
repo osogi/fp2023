@@ -106,7 +106,7 @@ let iphi var _tp lst =
   let* last_block = read_last_block in
   let res = List.find_opt (fun (_, label) -> Ast.variable_equal label last_block) lst in
   match res with
-  | Some (v, _) -> get_const_from_value v >>= write_var var 
+  | Some (v, _) -> get_const_from_value v >>= write_var var
   | None -> fail "LLVM do crash-crash (clang-17.0.3 )"
 ;;
 
@@ -116,20 +116,19 @@ let iselect var cond_tp cond res_tp v1 v2 =
   let* v1 = get_const_from_value v1 in
   let* v2 = get_const_from_value v2 in
   let* res =
-  match cond_tp with
-  | Ast.TVector (n, _) ->
-    (match res_tp with
-     | Ast.TVector (m, elem_tp) when m == n ->
-       let* v1 = is_vector return v1 in
-       let* v2 = is_vector return v2 in
-       let vvs = List.combine v1 v2 in
-       let* bls = get_const_from_value cond >>= is_vector is_bool in
-       return (Ast.CVector (List.map2 real_select bls vvs))
-     | _ -> fail "selected values for vector select must be vectors with same size")
-  | _ ->
-    let* b = get_const_from_value cond >>= is_bool in
-    return (real_select b (v1, v2))
-  in 
+    match cond_tp with
+    | Ast.TVector (n, _) ->
+      (match res_tp with
+       | Ast.TVector (m, _) when m == n ->
+         let* v1 = is_vector return v1 in
+         let* v2 = is_vector return v2 in
+         let vvs = List.combine v1 v2 in
+         let* bls = get_const_from_value cond >>= is_vector is_bool in
+         return (Ast.CVector (List.map2 real_select bls vvs))
+       | _ -> fail "selected values for vector select must be vectors with same size")
+    | _ ->
+      let* b = get_const_from_value cond >>= is_bool in
+      return (real_select b (v1, v2))
+  in
   write_var var res
 ;;
-

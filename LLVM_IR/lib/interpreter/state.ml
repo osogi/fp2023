@@ -27,12 +27,17 @@ end
 type map_heap = char MapInt.t [@@deriving show { with_path = false }]
 type map_var = Ast.const MapString.t [@@deriving show { with_path = false }]
 type bytes = (int * char) Seq.t
-type state = map_var * map_var * map_heap * int * Ast.variable (*local glob heap stack_pointer*)[@@deriving show { with_path = false }]
+
+type state = map_var * map_var * map_heap * int * Ast.variable
+(*local glob heap stack_pointer*) [@@deriving show { with_path = false }]
 
 let glob_sect = 1024
 let stack_sect = 0xcf000000
-let last_block_init =  Ast.LocalVar "<None>"
-let empty_state : state = MapString.empty, MapString.empty, MapInt.empty, stack_sect, last_block_init
+let last_block_init = Ast.LocalVar "<None>"
+
+let empty_state : state =
+  MapString.empty, MapString.empty, MapInt.empty, stack_sect, last_block_init
+;;
 
 let read_var : Ast.variable -> (state, Ast.const) t =
   let find_var name map =
@@ -42,7 +47,7 @@ let read_var : Ast.variable -> (state, Ast.const) t =
     | None -> fail (Printf.sprintf "Runtime error: Variable %s is not initialized" name)
   in
   fun variable ->
-    let* local, glob, _, _ , _ = read in
+    let* local, glob, _, _, _ = read in
     match variable with
     | Ast.GlobalVar name -> find_var name glob
     | Ast.LocalVar name -> find_var name local
@@ -81,15 +86,19 @@ let write_bytes : bytes -> (state, unit) t =
   write (old_local, old_global, MapInt.add_seq bts old_heap, old_stack, old_block)
 ;;
 
-let read_last_block: (state, Ast.variable) t= 
-  let* _, _, _, _, block = read in 
+let read_last_block : (state, Ast.variable) t =
+  let* _, _, _, _, block = read in
   return block
+;;
 
-let write_last_block: Ast.variable -> (state, unit) t= 
-fun block ->
+let write_last_block : Ast.variable -> (state, unit) t =
+  fun block ->
   let* old_local, old_global, old_heap, old_stack, _ = read in
   write (old_local, old_global, old_heap, old_stack, block)
+;;
 
-
-let print_loc_vars : (state, unit) t=  let* old_local, old_global, old_heap, old_stack, block = read in
-let _ = Printf.printf "%s\n\n\n" (show_map_var old_local) in return ()
+let print_loc_vars : (state, unit) t =
+  let* old_local, old_global, old_heap, old_stack, block = read in
+  let _ = Printf.printf "%s\n\n\n" (show_map_var old_local) in
+  return ()
+;;

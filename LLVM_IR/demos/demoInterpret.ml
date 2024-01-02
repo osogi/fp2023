@@ -4,5 +4,5 @@
 
 let () =
   let s = Stdio.In_channel.input_all Stdlib.stdin in
-  Main.interpretate_programm s 
+  Main.interpretate_programm s
 ;;
