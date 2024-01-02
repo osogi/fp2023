@@ -1,8 +1,8 @@
 (** Copyright 2023-2024, Efremov Alexey *)
 
 (** SPDX-License-Identifier: CC0-1.0 *)
-open Ihelp.State
 
+open Ihelp.State
 open CommonInterpInstructions
 
 let write_conversion_res operat is_elem s_tp_decon d_tp_decon s_tp s_val d_tp var =
@@ -19,8 +19,7 @@ let write_conversion_res operat is_elem s_tp_decon d_tp_decon s_tp s_val d_tp va
   write_var var res
 ;;
 
-let int_d tp =
-  match tp with
+let int_d = function
   | Ast.TInteger sz -> sz
   | _ ->
     let _ = Printf.printf "Impossible error: get wrong type at conversion operation" in
