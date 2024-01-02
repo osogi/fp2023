@@ -128,7 +128,6 @@ let ser_deser target =
   match res with
   | _, Result.Ok bts -> deserialise (Ast.const_to_tp target) bts
   | _, Result.Error _ -> CVoid
-  
 ;;
 
 let ser_test target print =
