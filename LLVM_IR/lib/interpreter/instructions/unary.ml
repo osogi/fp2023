@@ -1,8 +1,8 @@
 (** Copyright 2023-2024, Efremov Alexey *)
 
 (** SPDX-License-Identifier: CC0-1.0 *)
-open Ihelp.State
 
+open Ihelp.State
 open CommonInterpInstructions
 
 let real_fneg v = Ast.CFloat (Float.neg v)

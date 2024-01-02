@@ -1,8 +1,8 @@
 (** Copyright 2023-2024, Efremov Alexey *)
 
 (** SPDX-License-Identifier: CC0-1.0 *)
-open Ihelp.State
 
+open Ihelp.State
 open CommonInterpInstructions
 
 let real_shl sz x y = Common.IrInts.create (Int64.shift_left x (Int64.to_int y)) sz

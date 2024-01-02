@@ -1,8 +1,8 @@
 (** Copyright 2023-2024, Efremov Alexey *)
 
 (** SPDX-License-Identifier: CC0-1.0 *)
-open Ihelp
 
+open Ihelp
 open State
 open CommonInterpInstructions
 
@@ -16,22 +16,24 @@ let ialloca variable tp value align =
 let istore _tp value ptr align =
   let* value = get_const_from_value value in
   let* ptr = get_const_from_value ptr >>= is_ptr in
-  if true (* ptr mod align == 0 *)
-  then Memory.put_cnst_in_heap ptr value
-  else fail "Runtime error: get unaligned pointer for store"
+  (* if ptr mod align == 0
+     then *)
+  Memory.put_cnst_in_heap ptr value
 ;;
+
+(* else fail "Runtime error: get unaligned pointer for store" *)
 
 let iload var tp ptr align =
   let* ptr = get_const_from_value ptr >>= is_ptr in
-  if true (* ptr mod align == 0 *)
-  then
-    let* cnst = Memory.take_cnst_in_heap ptr tp in
-    write_var var cnst
-  else fail "Runtime error: get unaligned pointer for load"
+  (* if   ptr mod align == 0
+     then *)
+  let* cnst = Memory.take_cnst_in_heap ptr tp in
+  write_var var cnst
 ;;
 
-let rec rec_real_getelementprt tp ptr ilist =
-  match ilist with
+(* else fail "Runtime error: get unaligned pointer for load" *)
+
+let rec rec_real_getelementprt tp ptr = function
   | [] -> return ptr
   | x :: tl ->
     let* delta_and_ntp =
@@ -50,8 +52,7 @@ let rec rec_real_getelementprt tp ptr ilist =
     rec_real_getelementprt ntp (ptr + delta) tl
 ;;
 
-let real_getelemetptr tp ptr ilist =
-  match ilist with
+let real_getelemetptr tp ptr = function
   | [] -> return (to_ptr ptr)
   | x :: tl ->
     let ptr = ptr + (Serialisation.raw_date_len tp * x) in
@@ -60,8 +61,7 @@ let real_getelemetptr tp ptr ilist =
 ;;
 
 let igetelementptr var v_tp ptr_tp ptr ilist =
-  let rec transpose list =
-    match list with
+  let rec transpose = function
     | [] -> []
     | [] :: xss -> transpose xss
     | (x :: xs) :: xss ->

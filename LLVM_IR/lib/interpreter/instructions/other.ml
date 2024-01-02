@@ -1,8 +1,8 @@
 (** Copyright 2023-2024, Efremov Alexey *)
 
 (** SPDX-License-Identifier: CC0-1.0 *)
-open Ihelp.State
 
+open Ihelp.State
 open CommonInterpInstructions
 
 let real_frem _tp x y = Ast.CFloat (Float.rem x y)

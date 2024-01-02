@@ -1,12 +1,11 @@
 (** Copyright 2023-2024, Efremov Alexey *)
 
 (** SPDX-License-Identifier: CC0-1.0 *)
-open Ihelp.State
 
+open Ihelp.State
 open CommonInterpInstructions
 
-let rec real_extract var cnst ints =
-  match ints with
+let rec real_extract var cnst = function
   | [] -> write_var var cnst
   | ind :: tl ->
     let* lst = is_aggregate return cnst in
