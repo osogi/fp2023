@@ -32,5 +32,5 @@ let launch_bitwise_operation : Ast.bitwise_binary_operation -> (state, instr_lau
      write_binop_res tp (check_to_int real_or) is_int v1 v2 var
    | Ast.Xor (var, tp, v1, v2) ->
      write_binop_res tp (check_to_int real_xor) is_int v1 v2 var)
-  *> return None
+  *> return NoRes
 ;;

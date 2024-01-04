@@ -55,5 +55,5 @@ let launch_binary_operation : Ast.binary_operation -> (state, instr_launch_res) 
    | Ast.Fdiv (var, tp, v1, v2) -> write_binop_res tp real_fdiv is_float v1 v2 var
    | Ast.Frem (var, tp, v1, v2) -> write_binop_res tp real_frem is_float v1 v2 var
    | Ast.Fsub (var, tp, v1, v2) -> write_binop_res tp real_fsub is_float v1 v2 var)
-  *> return None
+  *> return NoRes
 ;;

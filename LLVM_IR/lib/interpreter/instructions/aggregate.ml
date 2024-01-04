@@ -30,7 +30,7 @@ let aggregate_const_by_const = function
 let single_insert new_val lst ind =
   if ind >= List.length lst
   then fail "Runtime error: try get element outside of aggregate type"
-  else return (List.mapi (fun c x -> if c == ind then new_val else x) lst)
+  else return (List.mapi (fun c x -> if c = ind then new_val else x) lst)
 ;;
 
 let rec real_insert var new_val agg_const ints =
@@ -76,5 +76,5 @@ let launch_aggregate_instruction
      iextractvalue var agg_tp agg_val ints
    | Ast.Insertvalue (var, agg_tp, agg_val, v_tp, v, ints) ->
      iinsertvalue var agg_tp agg_val v_tp v ints)
-  *> return None
+  *> return NoRes
 ;;

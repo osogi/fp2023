@@ -27,7 +27,7 @@ let real_icmp trans right_vals x y =
   let x = trans x in
   let y = trans y in
   let res = Int64.compare x y in
-  match List.find_opt (fun x -> x == res) right_vals with
+  match List.find_opt (fun x -> x = res) right_vals with
   | Some _ -> Common.IrInts.create 1L 1
   | None -> Common.IrInts.create 0L 1
 ;;
@@ -74,7 +74,7 @@ let parse_fcmp_mode str =
 let real_fcmp addcmp right_vals x y =
   let res = Float.compare x y in
   let b =
-    match List.find_opt (fun x -> x == res) right_vals with
+    match List.find_opt (fun x -> x = res) right_vals with
     | Some _ -> true
     | None -> false
   in
@@ -119,7 +119,7 @@ let iselect var cond_tp cond res_tp v1 v2 =
     match cond_tp with
     | Ast.TVector (n, _) ->
       (match res_tp with
-       | Ast.TVector (m, _) when m == n ->
+       | Ast.TVector (m, _) when m = n ->
          let* v1 = is_vector return v1 in
          let* v2 = is_vector return v2 in
          let vvs = List.combine v1 v2 in

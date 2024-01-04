@@ -60,5 +60,5 @@ let launch_conversion_instruction
      write_conversion_res real_ptrtoint is_ptr empty_d int_d s_tp s_val d_tp var
    | Ast.InttoprtTo (var, s_tp, s_val, d_tp) ->
      write_conversion_res real_inttoptr is_int int_d empty_d s_tp s_val d_tp var)
-  *> return None
+  *> return NoRes
 ;;

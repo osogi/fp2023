@@ -84,7 +84,7 @@ and parse_const_integer size =
   choice
     [ (let* sign = choice [ char '-' *> return (-1L); return 1L ] in
        parse_integer64 >>| fun value -> Common.IrInts.create (Int64.mul sign value) size)
-    ; (if size == 1
+    ; (if size = 1
        then
          choice
            [ word "true" *> return (Common.IrInts.create 1L size)

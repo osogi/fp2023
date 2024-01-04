@@ -7,7 +7,7 @@ open Ihelp.State
 type instr_launch_res =
   | Ret of Ast.const
   | Jmp of Ast.variable
-  | None
+  | NoRes
 
 let to_ptr x = Ast.CPointer (Ast.PointerInt x)
 

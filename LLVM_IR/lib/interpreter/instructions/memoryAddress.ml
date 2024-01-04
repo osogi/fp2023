@@ -16,7 +16,7 @@ let ialloca variable tp value align =
 let istore _tp value ptr align =
   let* value = get_const_from_value value in
   let* ptr = get_const_from_value ptr >>= is_ptr in
-  (* if ptr mod align == 0
+  (* if ptr mod align = 0
      then *)
   Memory.put_cnst_in_heap ptr value
 ;;
@@ -25,7 +25,7 @@ let istore _tp value ptr align =
 
 let iload var tp ptr align =
   let* ptr = get_const_from_value ptr >>= is_ptr in
-  (* if   ptr mod align == 0
+  (* if   ptr mod align = 0
      then *)
   let* cnst = Memory.take_cnst_from_heap ptr tp in
   write_var var cnst
@@ -75,7 +75,7 @@ let igetelementptr var v_tp ptr_tp ptr ilist =
     let* ptrs = get_const_from_value ptr >>= is_vector is_ptr in
     let ptr_len = List.length ptrs in
     let* vec_ind = map_list f ilist in
-    if not (List.for_all (fun l -> ptr_len == List.length l) vec_ind)
+    if not (List.for_all (fun l -> ptr_len = List.length l) vec_ind)
     then fail "Vectors have different size in getlementptr"
     else (
       let indss = transpose vec_ind in
@@ -100,5 +100,5 @@ let launch_memory_address_operation
    | Ast.Load (var, tp, ptr, align) -> iload var tp ptr align
    | Ast.Getelementptr (var, v_tp, ptr_tp, ptr, ilist) ->
      igetelementptr var v_tp ptr_tp ptr ilist)
-  *> return None
+  *> return NoRes
 ;;
