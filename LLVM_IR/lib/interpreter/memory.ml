@@ -6,7 +6,7 @@ open State
 
 let align_addr addr align isUp =
   let res = addr / align * align in
-  if res != addr then if isUp then res + align else res else res
+  if res <> addr then if isUp then res + align else res else res
 ;;
 
 let put_bytes_in_heap : int -> char list -> (state, unit) t =

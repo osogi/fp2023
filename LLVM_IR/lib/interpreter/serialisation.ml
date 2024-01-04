@@ -6,7 +6,7 @@ open State
 
 let div_up x y =
   let res = x / y in
-  if y * res != x then res + 1 else res
+  if y * res <> x then res + 1 else res
 ;;
 
 let get_n_byte x n =
