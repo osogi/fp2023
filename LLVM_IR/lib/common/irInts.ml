@@ -23,14 +23,14 @@ let create x n = Ast.CInteger (n, cut x n)
 
 let bin_op int_op l r =
   match l, r with
-  | Ast.CInteger (sz1, v1), Ast.CInteger (sz2, v2) when sz1 == sz2 ->
+  | Ast.CInteger (sz1, v1), Ast.CInteger (sz2, v2) when sz1 = sz2 ->
     Some (create (int_op (uget v1 sz1) (uget v2 sz2) sz1))
   | _ -> None
 ;;
 
 let sbin_op int_op l r =
   match l, r with
-  | Ast.CInteger (sz1, v1), Ast.CInteger (sz2, v2) when sz1 == sz2 ->
+  | Ast.CInteger (sz1, v1), Ast.CInteger (sz2, v2) when sz1 = sz2 ->
     Some (create (int_op (sget v1 sz1) (sget v2 sz2) sz1))
   | _ -> None
 ;;

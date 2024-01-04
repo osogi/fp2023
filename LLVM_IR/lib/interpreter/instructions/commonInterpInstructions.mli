@@ -5,7 +5,7 @@
 type instr_launch_res =
   | Ret of Ast.const
   | Jmp of Ast.variable
-  | None
+  | NoRes
 
 val to_ptr : int -> Ast.const
 val err_type : Ast.tp -> Ast.tp -> 'a -> 'a * ('b, string) result

@@ -93,7 +93,7 @@ and launch_other_operation : Ast.other_operation -> (state, instr_launch_res) t 
    | Ast.Select (var, cond_tp, cond, res_tp, v1, v2) ->
      Other.iselect var cond_tp cond res_tp v1 v2
    | Ast.Call (var, res_tp, fnc, params) -> icall var res_tp fnc params)
-  *> return None
+  *> return NoRes
 
 and launch_instruction : Ast.instruction -> (state, instr_launch_res) t = function
   | Ast.Terminator inst -> Terminator.launch_terminator_instruction inst
@@ -115,7 +115,7 @@ and launch_block : Ast.variable -> (state, Ast.const) t =
   match last_instr with
   | Jmp x -> write_last_block bb_var *> launch_block x
   | Ret x -> return x
-  | None -> fail "Impossible error: last instruction in block should have some result\n"
+  | NoRes -> fail "Impossible error: last instruction in block should have some result\n"
 
 and launch_function : Ast.func -> Ast.const list -> (state, Ast.const) t =
   fun fnc params_val ->

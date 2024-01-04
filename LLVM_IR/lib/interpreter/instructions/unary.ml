@@ -22,5 +22,5 @@ let launch_unary_operation : Ast.unary_operation -> (state, instr_launch_res) t 
   fun instr ->
   (match instr with
    | Ast.Fneg (variable, tp, value) -> ifneg variable tp value)
-  *> return None
+  *> return NoRes
 ;;

@@ -24,7 +24,7 @@ let iextractelement var _vec_tp vec_val _itp ival =
 ;;
 
 let real_insert var vec_val ind new_val =
-  let new_lst = List.mapi (fun c x -> if c == ind then new_val else x) vec_val in
+  let new_lst = List.mapi (fun c x -> if c = ind then new_val else x) vec_val in
   write_var var (Ast.CVector new_lst)
 ;;
 
@@ -64,5 +64,5 @@ let launch_vector_instruction : Ast.vector_instruction -> (state, instr_launch_r
      iinsertelement var vec_tp vec_val new_val itp ival
    | Ast.Shufflevector (var, vec_tp, vec1, vec2, m, vec3) ->
      ishufflevector var vec_tp vec1 vec2 m vec3)
-  *> return None
+  *> return NoRes
 ;;
