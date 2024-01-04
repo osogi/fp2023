@@ -27,7 +27,7 @@ let iload var tp ptr align =
   let* ptr = get_const_from_value ptr >>= is_ptr in
   (* if   ptr mod align == 0
      then *)
-  let* cnst = Memory.take_cnst_in_heap ptr tp in
+  let* cnst = Memory.take_cnst_from_heap ptr tp in
   write_var var cnst
 ;;
 

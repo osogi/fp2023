@@ -31,7 +31,7 @@ let put_cnst_in_heap : int -> Ast.const -> (state, unit) t =
    fun addr cnst align -> put_cnst_in_heap (align_addr addr align true) cnst
    ;; *)
 
-let take_cnst_in_heap : int -> Ast.tp -> (state, Ast.const) t =
+let take_cnst_from_heap : int -> Ast.tp -> (state, Ast.const) t =
   fun addr tp ->
   let indxs = List.init (Serialisation.raw_date_len tp) (fun x -> addr + x) in
   let* bts = map_list read_byte indxs in

@@ -3,7 +3,7 @@ SPDX-License-Identifier: CC0-1.0
 
   $ ./demoInterpret.exe < ./attachments/simple_ssa_fail.ll
   SSA check failed: 
-  	Variable arg already was assignmented
+  	Variable arg already was assigned
 
   $ ./demoInterpret.exe < ./attachments/fac.ll
   Programm return: 
