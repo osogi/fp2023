@@ -9,7 +9,7 @@ let write_conversion_res operat is_elem s_tp_decon d_tp_decon s_tp s_val d_tp va
   let* res =
     match s_tp, d_tp with
     | Ast.TVector (n1, s_el_tp), Ast.TVector (n2, d_el_tp) ->
-      if n1 != n2
+      if n1 <> n2
       then fail "Source vector and destination have different size"
       else vectorize1 (operat (s_tp_decon s_el_tp) (d_tp_decon d_el_tp)) is_elem s_val
     | _ ->
