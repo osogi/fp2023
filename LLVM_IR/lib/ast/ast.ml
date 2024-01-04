@@ -189,13 +189,10 @@ let rec const_to_tp : const -> tp = function
 let rec tp_equal : tp -> tp -> bool =
   fun t1 t2 ->
   match t1, t2 with
-  | TVoid, TVoid -> true
-  | TLabel, TLabel -> true
-  | TFloat, TFloat -> true
+  | TVoid, TVoid | TLabel, TLabel | TFloat, TFloat | TPointer, TPointer -> true
   | TInteger x1, TInteger x2 when x1 == x2 -> true
-  | TPointer, TPointer -> true
-  | TVector (n1, tp1), TVector (n2, tp2) when n1 == n2 && tp_equal tp1 tp2 -> true
-  | TArr (n1, tp1), TArr (n2, tp2) when n1 == n2 && tp_equal tp1 tp2 -> true
+  | (TVector (n1, tp1), TVector (n2, tp2) | TArr (n1, tp1), TArr (n2, tp2))
+    when n1 == n2 && tp_equal tp1 tp2 -> true
   | TStruct tps1, TStruct tps2 -> List.equal tp_equal tps1 tps2
   | _ -> false
 ;;

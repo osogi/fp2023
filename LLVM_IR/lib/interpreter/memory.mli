@@ -8,6 +8,6 @@ val put_cnst_in_heap : int -> Ast.const -> (State.state, unit) State.t
 
 (* val put_cnst_in_heap_align :
    int -> Ast.const -> int -> (State.state, unit) State.t *)
-val take_cnst_in_heap : int -> Ast.tp -> (State.state, Ast.const) State.t
+val take_cnst_from_heap : int -> Ast.tp -> (State.state, Ast.const) State.t
 val alloc_stack_align : int -> int -> (State.state, int) State.t
 val free_stack : int -> (State.state, unit) State.t

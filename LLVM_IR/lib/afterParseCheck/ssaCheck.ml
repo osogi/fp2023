@@ -9,7 +9,7 @@ module MapString = struct
 
   let pp pp_v ppf m =
     Format.fprintf ppf "@[[@[";
-    iter (fun k v -> Format.fprintf ppf "@[\"%s\": %a@],@\n" k pp_v v) m;
+    iter (fun k v -> Format.fprintf ppf "@[\"%S\": %a@],@\n" k pp_v v) m;
     Format.fprintf ppf "@]]@]"
   ;;
 end
@@ -22,7 +22,7 @@ let check_var : Ast.variable -> (state, unit) t =
     fun name map ->
     let value = MapString.find_opt name map in
     match value with
-    | Some _ -> fail (Printf.sprintf "Variable %s already was assignmented" name)
+    | Some _ -> fail (Printf.sprintf "Variable %s already was assigned" name)
     | None -> return ()
   in
   fun variable ->

@@ -9,7 +9,7 @@ module MapString = struct
 
   let pp pp_v ppf m =
     Format.fprintf ppf "@[[@[";
-    iter (fun k v -> Format.fprintf ppf "@[\"%s\": %a@],@\n" k pp_v v) m;
+    iter (fun k v -> Format.fprintf ppf "@[\"%S\": %a@],@\n" k pp_v v) m;
     Format.fprintf ppf "@]]@]"
   ;;
 end
