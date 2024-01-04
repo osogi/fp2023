@@ -1,3 +1,5 @@
+;! @.str = global [4 x i8] c"%d\0A\00", align 1
+;! declare i32 @printf(ptr , ...) 
 
 ; Function Attrs: noinline nounwind optnone uwtable
 define  i32 @char2int(ptr  %0, i32  %1)  {
@@ -217,5 +219,7 @@ define i32 @main(i32  %0, ptr  %1) {
 
 23:                                               ; preds = %22, %11
   %24 = load i32, ptr %3, align 4
+  ;! %print_res = call i32 (ptr, ...) @printf(ptr @.str, i32 %24)
+  ;! ret i32 0
   ret i32 %24
 }

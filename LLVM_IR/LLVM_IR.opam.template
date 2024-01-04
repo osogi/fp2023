@@ -1,0 +1,3 @@
+depexts: [
+  [ "clang-17" ] {os-distribution = "ubuntu"}
+]

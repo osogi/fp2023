@@ -1,4 +1,5 @@
-
+;! @.str = global [4 x i8] c"%f\0A\00", align 1
+;! declare i32 @printf(ptr , ...) 
 
 ; Function Attrs: noinline nounwind optnone uwtable
 
@@ -196,9 +197,9 @@ define  float @findArea(<2 x float> %0, <2 x float> %1, <2 x float> %2)  {
   %28 = load float, ptr %27, align 4
   %29 = fsub float %26, %28
   %30 = call float @llvm.fmuladd.f32(float %24, float %29, float %22)
-  %32 = fdiv float %30, 2.000000e+00
-  %34 = call float @my_fabs(float  %32)
-  ret float %34
+  %31 = fdiv float %30, 2.000000e+00
+  %32 = call float @my_fabs(float  %31)
+  ret float %32
 }
 
 ; Function Attrs: noinline nounwind optnone uwtable
@@ -277,5 +278,7 @@ define  float @main(i32  %0, ptr  %1)  {
   %54 = call float @findArea(<2 x float> %51, <2 x float> %52, <2 x float> %53)
   store float %54, ptr %9, align 4
   %55 = load float, ptr %9, align 4
+  ;! %fd = fpext float %55 to double
+  ;! %print_res = call i32 (ptr, ...) @printf(ptr @.str, double %fd)
   ret float %55
 }
