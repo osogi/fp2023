@@ -20,7 +20,7 @@
  (target sum_args.elf)
  (deps sum_args_patched.ll)
  (action
-  (system "clang-16 %{deps} -o  %{target}")))
+  (system "clang-15 %{deps} -o  %{target}")))
 
 (rule
  (target fac_arg_patched.ll)
@@ -32,7 +32,7 @@
  (target fac_arg.elf)
  (deps fac_arg_patched.ll)
  (action
-  (system "clang-16 %{deps} -o  %{target}")))
+  (system "clang-15 %{deps} -o  %{target}")))
 
 (rule
  (target triangle_square_patched.ll)
@@ -44,7 +44,7 @@
  (target triangle_square.elf)
  (deps triangle_square_patched.ll)
  (action
-  (system "clang-16 %{deps} -o  %{target}")))
+  (system "clang-15 %{deps} -o  %{target}")))
 
 (cram
  (applies_to parsingTests)
