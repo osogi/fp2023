@@ -34,5 +34,5 @@ build: [
   ]
 ]
 depexts: [
-  [ "clang-15" ] {os-distribution = "ubuntu"}
+  [ "llvm-15-dev" "clang-15" ] {os-distribution = "ubuntu"}
 ]
