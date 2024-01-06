@@ -69,7 +69,7 @@ jobs:
 
       - name: Installing dependencies
         run: |
-          apt update
+          sudo apt update
           opam update
           opam install ./${{ env.latest }} --depext-only --with-test --with-doc
           opam install ./${{ env.latest }} --deps-only --with-test --with-doc
