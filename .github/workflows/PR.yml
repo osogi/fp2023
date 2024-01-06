@@ -63,7 +63,7 @@ jobs:
 
       # TODO: set OCAMLRUNPARAM=b
       - run: |
-          echo "latest=./LLVM_IR/" >> $GITHUB_ENV
+          echo "latest=LLVM_IR" >> $GITHUB_ENV
           echo "${{ env.latest }}"
         #if: ${{ github.event.pull_request.user.login == 'fp2022-helper' }}
 
